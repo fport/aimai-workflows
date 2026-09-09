@@ -8,10 +8,10 @@ a retry sends nothing twice.
 
 | Stack | completed | escalated | resumed after restart | duplicate sends | llm calls | orchestration lines | seconds |
 |---|---|---|---|---|---|---|---|
-| plain | 50 | 15 | 15 | 0 | 100 | 160 | 0.21 |
-| langgraph | 50 | 15 | 15 | 0 | 100 | 151 | 0.19 |
-| pydantic-ai | 50 | 15 | 15 | 0 | 300 | 259 | 0.44 |
-| openai-agents | 50 | 15 | 15 | 0 | 300 | 255 | 0.37 |
+| plain | 50 | 15 | 15 | 0 | 100 | 160 | 0.20 |
+| langgraph | 50 | 15 | 15 | 0 | 100 | 151 | 0.18 |
+| pydantic-ai | 50 | 15 | 15 | 0 | 300 | 259 | 0.42 |
+| openai-agents | 50 | 15 | 15 | 0 | 300 | 255 | 0.35 |
 
 `completed` counts tickets with at least one reply in the outbox;
 `duplicate_sends` counts extra rows the customer would have received.

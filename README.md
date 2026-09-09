@@ -13,11 +13,13 @@ questions.
 | 07 | `stacks/` | What actually differs between four orchestration stacks? |
 | 08 | `dagrun/` | What is the coordination layer a framework does for you? |
 
+**153 tests**, none of which needs an API key, a database or a network.
+
 Built on [aimai-kit](https://github.com/fport/aimai-kit) — the provider,
 prompt, tool and agent layers come from there, so this repo can be about
 orchestration rather than about calling models.
 
-> Stages 06 and 07 are complete. Stage 08 is in progress.
+All three stages are complete.
 
 ---
 
@@ -44,7 +46,7 @@ days; waiting with `interrupt()` means holding nothing at all.
 
 ```bash
 uv sync --all-extras --group dev
-uv run pytest                          # 93 tests, no API key, no database
+uv run pytest                          # 153 tests, no API key, no database
 
 # The headline claim, executable: kill the worker mid-approval and finish.
 uv run python scripts/kill_mid_run.py
@@ -205,6 +207,194 @@ answer there is not "use a bigger framework" either.
 The constraint that would change my mind is a team already fluent in one of
 them. All four passed every test in this repo; none of the differences above is
 worth relearning an ecosystem over.
+
+
+---
+
+## 08 — dag-orchestrator
+
+A DAG runner with no framework underneath it: five node kinds, nine states, a
+written state transition table, hard and soft dependencies, fingerprint-based
+reruns and a SQLite result store. On top of it one real flow — a due-diligence
+review with two specialist agents — and, for comparison, a fifteen-line
+LangGraph supervisor doing the same work dynamically.
+
+```bash
+uv run dagrun --seed SZL-2026-0431 --dry-run     # validate, print the order
+uv run dagrun --seed SZL-2026-0431               # run it
+uv run dagrun --seed SZL-2026-0431               # again: everything cached
+uv run dagrun --seed SZL-2026-0431 --fail caselaw    # a degraded opinion
+uv run dagrun --seed SZL-2026-0431 --fail archive    # the saga: retracted
+```
+
+```text
+extract ──> scope_gate ──> statute  ─┐
+    │           │                    ├──> synthesis ──> deliver ──> archive
+    │           └───────> caselaw ···┘                     ╎
+    └─────> clause_review ───────────┘              retract ╌╌ compensates
+```
+
+Every node kind earns its place: `scope_gate` is a GATE because an out-of-scope
+document should SKIP the specialists rather than fail them; `clause_review` is
+a FANOUT because the number of clauses is unknown until `extract` has run;
+`synthesis` is a JOIN whose case-law input is `optional`; `deliver` has a side
+effect and `retract` COMPENSATEs it; `archive` exists so that something can
+fail *after* the side effect, which is the case a saga is for.
+
+### Why this work is not one agent
+
+One agent with five tools would be shorter, and it would lose four things this
+graph gives you for free.
+
+**Partial success has nowhere to live.** When the case-law source is down, an
+agent either gives up or quietly writes around the gap. The graph has a state
+for it, propagates it, and puts it in the opinion: *"INCOMPLETE: this opinion
+was written without caselaw."*
+
+**Reruns cost the same as first runs.** An agent's transcript is not addressable
+work. Here, `(seed, node_id, fingerprint)` means a rerun of an unchanged job
+costs nothing — measured at 100% saving over 100 jobs — and a changed prompt
+reruns exactly its node and that node's subtree.
+
+**Independent work is actually independent.** The two specialists have separate
+tool registries and separate contexts, so neither can be talked into the other's
+conclusion, and they run in the same superstep. One agent doing both in one
+context is serial and cross-contaminated.
+
+**The side effect is undoable.** An agent that sent an email cannot un-send it
+because nothing recorded that sending was a step. `COMPENSATE` is a node kind
+precisely so that it can.
+
+The honest counter-argument: for a flow with three steps and no side effects,
+all of this is overhead and one agent is right. The rule is at the end of this
+section.
+
+### The state transition table
+
+Nine states. This table is the contract, and `test_dag_execute.py` asserts the
+executor against it — where they disagree, the table is lying.
+
+| From | To | When |
+|---|---|---|
+| PENDING | READY | every dependency reached a terminal state |
+| PENDING | SKIPPED | a `requires` dependency is FAILED or SKIPPED |
+| PENDING | SKIPPED | a GATE dependency returned `passed: false` |
+| READY | RUNNING | the scheduler picked it up in this superstep |
+| RUNNING | SUCCEEDED | returned, with every input complete |
+| RUNNING | DEGRADED | returned, but an `optional` input was missing or degraded — or the node declared itself degraded |
+| RUNNING | READY | raised or timed out, and attempts remain |
+| RUNNING | FAILED | out of attempts, or over the node's cost ceiling |
+| READY | SKIPPED | the job's cost ceiling was reached before it ran |
+| SUCCEEDED / DEGRADED / FAILED | COMPENSATING | something downstream failed, or the node itself failed |
+| COMPENSATING | COMPENSATED | the compensation returned |
+| COMPENSATING | FAILED (job `needs_human`) | the compensation raised. No second attempt. |
+
+### Three decisions
+
+**`requires` vs `optional`.** A hard dependency that fails takes its dependants
+with it — SKIPPED, which the report counts separately from FAILED because
+nothing broke. A soft dependency that fails leaves its dependants runnable and
+DEGRADED. In the flow, `synthesis` requires `statute` and only optionally wants
+`caselaw`: a due-diligence opinion grounded in statute alone is worth delivering
+with a caveat, one grounded in case law alone is not. That is a legal judgement,
+not an engineering one, and it belongs in the graph where a reviewer can argue
+with it.
+
+**Where DEGRADED shows up in the report.** Everywhere, before the result. The
+state propagates downstream, `missing_data_section` is emitted whether or not
+anything is missing, and — the part that matters — the missing input list is
+passed *into* the synthesis, not just logged. A synthesis that is not told what
+it lacks writes with the confidence of one that has everything, and that
+paragraph is what a reader acts on.
+
+**What is in the fingerprint.** In: node id, `version` (derived from the prompt
+file's hash, never hand-maintained), seed, the outputs of every dependency in
+sorted order, and the fan-out item. Out: the clock, the attempt number, cost and
+token counts, unrelated nodes, and — the interesting one — execution policy.
+`max_attempts`, `timeout_s` and `cost_ceiling_usd` are deliberately excluded:
+if policy were in the key, then raising a timeout to get one flaky node through
+would rerun the entire graph, including the expensive nodes that had already
+succeeded.
+
+### Measurements
+
+100 jobs with a deterministic failure mix, full table in
+[`results/dagrun.md`](results/dagrun.md).
+
+| Node | succeeded | degraded | failed | compensated |
+|---|---|---|---|---|
+| `extract` | 100 | 0 | 0 | 0 |
+| `clause_review` | 100 | 0 | 0 | 0 |
+| `statute` | 100 | 0 | 0 | 0 |
+| `caselaw` | 87 | 0 | 13 | 0 |
+| `synthesis` | 87 | 13 | 0 | 0 |
+| `deliver` | 80 | 13 | 0 | 7 |
+| `archive` | 77 | 13 | 10 | 0 |
+
+| Metric | How it is measured | Value |
+|---|---|---|
+| Clean jobs | every sink node succeeded | 77/100 |
+| Degraded jobs | delivered on partial evidence | 13/100 |
+| Failed jobs | a sink node failed or was skipped | 7/100 |
+| Needs a human | a compensation failed | 3/100 |
+| Rerun saving | 1 − (spend on rerun / cost of result) | 100% |
+| Cost per job, p90 | the number a budget is set from | $0.0780 |
+| Cost per job, max | one job, worst case | $0.0780 |
+
+**No mean cost, on purpose.** A retry storm or a supervisor loop leaves the mean
+untouched and multiplies the maximum, so a table with a mean and no tail hides
+the only number that matters when the bill arrives. p90 and max, or nothing.
+
+**No aggregate success rate, for the same reason.** "94% of jobs succeeded" is
+compatible with the case-law specialist being down all week: every job degraded,
+none failed, and the aggregate looks fine. Per-node rates make an outage
+visible.
+
+Two caveats a reader should apply: the specialists are scripted agents rather
+than models, so p90 equals the max here — the cost spread of a real model is
+not in this table. And the 13% degradation rate is the failure mix this script
+injects, not an observation about any real service.
+
+### Static graph or supervisor?
+
+**If the shape of the work is fixed, use the graph. If it is not, use a
+supervisor.** The due-diligence flow always extracts, always reviews clauses,
+and always asks both specialists — so the graph is right, and
+`dagrun/supervisor.py` exists to make the comparison concrete rather than
+theoretical.
+
+The supervisor is fifteen lines of routing and three constraints, each of which
+is a failure that shows up immediately without it:
+
+1. **Completed specialists leave the candidate list.** Otherwise the model asks
+   for the same expert forever, because its last answer was useful.
+2. **A hard step ceiling in code**, not a sentence in a prompt. This is what
+   keeps a bad routing decision from becoming an unbounded bill.
+3. **An unknown name falls back to the first outstanding specialist** rather
+   than raising. A supervisor that crashes on a hallucinated name turns a
+   recoverable routing mistake into a failed job.
+
+Not `langgraph-supervisor`: it is still in its 0.0.x band, and those three
+constraints are the entire value of the file. A dependency that owns the loop
+owns the constraints too.
+
+`test_dag_flow.py` runs the supervisor against a chooser that always picks the
+same expert and one that invents a name; both terminate with both specialists
+visited.
+
+### The test that has no equivalent elsewhere
+
+```python
+def test_every_required_edge_is_real(node_id, dropped):
+    """Remove a hard dependency; the node's output must change."""
+```
+
+A `requires` edge that does not change the answer is not a dependency — it is a
+serialisation of work that could have run in parallel. Nothing else in a
+codebase catches that: it is not a type error, not a test failure, not a
+performance regression anyone can point at. The test drops one hard edge at a
+time and asserts that the node that declared it produces a different result
+without it.
 
 
 ---
@@ -397,6 +587,19 @@ knowing before deciding it fits an existing codebase.
 **Agents SDK tracing ships to OpenAI unless told otherwise.** Not a bug — a
 default. `set_tracing_disabled(True)` at import, or a custom processor.
 
+**Failing an over-budget node is not enough; stop scheduling.** A runner that
+keeps starting work after the ceiling spends it several times over. Stage 08's
+executor marks the remaining nodes SKIPPED with the reason, which is also what
+makes the report readable afterwards.
+
+**Cache the successes, never the failures.** A cached transient failure is a
+permanent one. `ResultStore.put` records every terminal state for the report;
+`get` only ever returns SUCCEEDED and DEGRADED.
+
+**A compensation gets one attempt.** Two automatic recovery layers turn one bad
+state into two, and the second is the one with no runbook. Escalate instead:
+`needs_human`, exit code 3.
+
 ---
 
 ## Layout
@@ -413,6 +616,17 @@ contract/           stage 06
   checkpointer.py   memory / SQLite / Postgres lifecycles, the serializer
   sinks.py          the fake CRM, and the idempotency key
   api.py            FastAPI: lifespan, two endpoints, one read endpoint
+dagrun/             stage 08
+  types.py          five node kinds, nine states, the result contract
+  validate.py       Kahn, references, compensation and fan-out checks
+  fingerprint.py    what invalidates a cached result, and what must not
+  store.py          SQLite, keyed (seed, node_id, fingerprint)
+  execute.py        supersteps, transitions, budgets, retries, saga
+  report.py         the run report, the missing-data section, Mermaid
+  supervisor.py     the dynamic version, and its three constraints
+  specialists.py    aimai-kit agents as node bodies, with isolated tools
+  flows/            due_diligence.py — the flow the CLI runs
+  __main__.py       the CLI: --seed, --dry-run, --fresh, --fail
 stacks/             stage 07
   core.py           the business logic all four stacks import
   contract.py       RunOutcome, the two-verb protocol, the shared CLI
@@ -426,8 +640,10 @@ stacks/             stage 07
 web/review.html     the approval screen
 prompts/            assess_risk@v1, classify_ticket@v1, draft_reply@v1
 fixtures/           contracts (06), 50 tickets and a knowledge base (07)
-scripts/            kill_mid_run.py, measure.py, generate_tickets.py
-results/            measurements.md, durability.json, bench.md, chaos.md
+scripts/            kill_mid_run.py, measure.py, measure_dag.py,
+                    generate_tickets.py
+results/            measurements.md, durability.json, bench.md, chaos.md,
+                    dagrun.md
 ```
 
 ## License

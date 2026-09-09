@@ -1,0 +1,47 @@
+{
+  "cache_hits": 1877,
+  "cost_max": 0.078,
+  "cost_median": 0.078,
+  "cost_p90": 0.078,
+  "jobs": 100,
+  "needs_human": 3,
+  "node_states": {
+    "archive": {
+      "degraded": 13,
+      "failed": 10,
+      "succeeded": 77
+    },
+    "caselaw": {
+      "failed": 13,
+      "succeeded": 87
+    },
+    "clause_review": {
+      "succeeded": 100
+    },
+    "deliver": {
+      "compensated": 7,
+      "degraded": 13,
+      "succeeded": 80
+    },
+    "extract": {
+      "succeeded": 100
+    },
+    "scope_gate": {
+      "succeeded": 100
+    },
+    "statute": {
+      "succeeded": 100
+    },
+    "synthesis": {
+      "degraded": 13,
+      "succeeded": 87
+    }
+  },
+  "outcomes": {
+    "clean": 77,
+    "degraded": 13,
+    "failed": 7,
+    "needs_human": 3
+  },
+  "rerun_saving_mean": 1.0
+}
