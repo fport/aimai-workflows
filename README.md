@@ -5,6 +5,7 @@
 [![CI](https://github.com/fport/aimai-workflows/actions/workflows/ci.yml/badge.svg)](https://github.com/fport/aimai-workflows/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-8FE64A)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-MIT-8FE64A)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-fport.github.io-8FE64A)](https://fport.github.io/aimai-workflows/)
 
 Stateful agent workflows, in three stages that answer three different
 questions.
