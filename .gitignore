@@ -1,0 +1,22 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.DS_Store
+
+# Local runtime artifacts: the fake CRM, the local checkpointer, and anything
+# a measurement run wrote outside results/.
+.aimai-*.sqlite3
+*.sqlite3
+data/
+results/local-*
+
+# MkDocs build output
+site/

@@ -1,0 +1,84 @@
+MASTER SERVICES AGREEMENT
+
+This Master Services Agreement (the "Agreement") is entered into as of
+June 12, 2025 between Northwind Logistics Inc. (the "Customer") and Vantage
+Grid Systems GmbH (the "Supplier").
+
+1. SERVICES
+
+1.1 The Supplier shall provide the route-optimisation platform described in
+Schedule A (the "Services").
+
+1.2 The Supplier may modify the scope, composition and technical
+specification of the Services at any time at its sole discretion, and such
+modification shall take effect on publication to the Supplier's website.
+
+2. TERM
+
+2.1 This Agreement commences on July 1, 2025 and continues for an initial
+term of thirty-six (36) months.
+
+2.2 This Agreement renews automatically for successive twelve (12) month terms
+unless the Customer gives written notice of non-renewal not less than one
+hundred and eighty (180) days before the end of the then-current term.
+
+3. FEES
+
+3.1 The Customer shall pay a platform fee of EUR 82,000 per month, exclusive
+of value added tax.
+
+3.2 The Supplier may adjust the fees at any time on thirty (30) days' notice,
+and the Customer's continued use of the Services constitutes acceptance of
+the adjusted fees.
+
+3.3 The Customer shall pay all invoices within fifteen (15) days. Overdue
+amounts accrue interest at 2.5% per month, compounded monthly.
+
+4. DATA AND INTELLECTUAL PROPERTY
+
+4.1 All data generated through the Customer's use of the Services, including
+route histories and derived models, shall be the sole and exclusive property
+of the Supplier.
+
+4.2 The Customer grants the Supplier a perpetual, irrevocable, worldwide and
+royalty-free licence to use, reproduce and commercialise any data the Customer
+uploads to the Services, including after termination.
+
+4.3 The Supplier shall have no obligation to return or delete Customer data on
+termination.
+
+5. LIABILITY AND INDEMNITY
+
+5.1 The Customer's aggregate liability under this Agreement shall be unlimited
+in respect of any breach of Section 4 or Section 8.
+
+5.2 The Customer shall indemnify, defend and hold harmless the Supplier
+against any and all claims, losses, damages and expenses arising out of the
+Customer's use of the Services, without limitation as to amount and without
+regard to whether the claim arises from the Supplier's own negligence.
+
+5.3 The Supplier's aggregate liability shall not exceed EUR 10,000 in
+aggregate over the lifetime of this Agreement.
+
+6. TERMINATION
+
+6.1 The Customer may not terminate this Agreement for convenience.
+
+6.2 On any termination the Customer shall pay, as an exit fee, the fees that
+would have fallen due for the remainder of the then-current term.
+
+7. AUDIT AND COMPLIANCE
+
+7.1 The Customer shall procure that each of its subcontractors, at every tier,
+complies with the Supplier's security policy as amended from time to time, and
+shall certify such compliance quarterly.
+
+8. CONFIDENTIALITY
+
+8.1 The Customer shall keep the terms of this Agreement, including the fees,
+confidential in perpetuity.
+
+9. GOVERNING LAW
+
+9.1 This Agreement is governed by the laws of the State of Delaware and the
+parties submit to the exclusive jurisdiction of the courts of Delaware.

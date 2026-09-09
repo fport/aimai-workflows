@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync --all-extras --group dev --python ${{ matrix.python-version }}
+
+      - name: Lint
+        run: uv run ruff check src/ tests/ scripts/
+
+      - name: Format check
+        run: uv run ruff format --check src/ tests/ scripts/
+
+      # Nothing here needs an API key or a database: the rule-based reviewer
+      # and the in-memory checkpointer are the point of both.
+      - name: Test
+        run: uv run pytest
+
+      - name: Verify the package builds
+        run: uv build
+
+  postgres:
+    # The durability claim is about a real database. SQLite and Postgres
+    # disagree about concurrency and about what `setup()` has to create, so a
+    # claim tested only against SQLite is a claim about SQLite.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: contract
+          POSTGRES_PASSWORD: contract
+          POSTGRES_DB: contract
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U contract -d contract"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      CONTRACT_DB_DSN: postgresql://contract:contract@localhost:5432/contract?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras --group dev
+
+      - name: Durability tests against PostgreSQL
+        run: uv run pytest -m postgres
+
+  reproduce-claims:
+    # The two headline claims of stage 06 — a killed worker resumes, and it
+    # does not repeat the side effect — are scripts, not prose. They run here
+    # so a change that breaks either fails the build rather than being
+    # discovered by a reader.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras --group dev
+
+      - name: Kill the worker mid-approval and finish the review
+        run: uv run python scripts/kill_mid_run.py
+
+      - name: Regenerate the measurements
+        run: uv run python scripts/measure.py --runs 100
+
+      - name: Fail if a pinned measurement changed
+        # Only the deterministic file is diffed. Timings differ between
+        # machines; write counts and replay rates do not.
+        run: |
+          if ! git diff --quiet -- results/durability.json; then
+            echo "A pinned measurement changed but the committed result was not updated:"
+            git diff -- results/durability.json
+            exit 1
+          fi

@@ -1,0 +1,69 @@
+MASTER SERVICES AGREEMENT
+
+This Master Services Agreement (the "Agreement") is entered into as of
+March 3, 2025 between Northwind Logistics Inc. (the "Customer") and Arcadia
+Technologies Ltd. (the "Supplier").
+
+1. SERVICES
+
+1.1 The Supplier shall provide the hosted freight-tracking services described
+in Schedule A (the "Services") in accordance with the service levels set out
+in Schedule B.
+
+1.2 Any change to the scope of the Services requires a written change order
+signed by both parties.
+
+2. TERM
+
+2.1 This Agreement commences on April 1, 2025 and continues for an initial
+term of twelve (12) months.
+
+2.2 This Agreement renews for successive twelve (12) month terms unless either
+party gives written notice of non-renewal not less than sixty (60) days before
+the end of the then-current term.
+
+3. FEES
+
+3.1 The Customer shall pay a service fee of USD 45,000 per month, exclusive of
+value added tax.
+
+3.2 The Supplier may increase the fees once per contract year, with effect
+from the start of a renewal term, by no more than the increase in the
+Consumer Price Index over the preceding twelve months, on ninety (90) days'
+prior written notice.
+
+4. DATA
+
+4.1 As between the parties, the Customer owns all data it uploads to the
+Services, including all derived shipment records.
+
+4.2 The Supplier shall process Customer personal data only on the Customer's
+documented instructions and in accordance with the data processing addendum
+at Schedule C.
+
+4.3 On termination the Supplier shall, at the Customer's option, return or
+delete all Customer data within thirty (30) days and certify the deletion in
+writing.
+
+5. LIABILITY
+
+5.1 Each party's aggregate liability arising out of or in connection with this
+Agreement shall not exceed the total fees paid or payable in the twelve (12)
+months preceding the event giving rise to the claim.
+
+5.2 Neither party excludes liability for death or personal injury caused by
+its negligence, or for fraud.
+
+6. TERMINATION
+
+6.1 Either party may terminate this Agreement for convenience on ninety (90)
+days' prior written notice.
+
+6.2 Either party may terminate immediately on written notice if the other
+party commits a material breach that is not remedied within thirty (30) days
+of notice.
+
+7. GOVERNING LAW
+
+7.1 This Agreement is governed by the laws of England and Wales and the
+parties submit to the exclusive jurisdiction of the courts of London.

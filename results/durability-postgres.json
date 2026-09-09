@@ -1,0 +1,68 @@
+{
+  "backend": "postgres",
+  "durability": [
+    {
+      "checkpoint_writes": 2,
+      "crash_kept_document_hash": false,
+      "crash_resumes_at": [
+        "nothing survived; the review restarts"
+      ],
+      "mode": "exit",
+      "notes_written": 1,
+      "paused_at": [
+        "human_gate"
+      ],
+      "pending_write_batches": 1,
+      "resumed": true,
+      "reviewer_calls_before_resume": 1,
+      "reviewer_calls_total": 1,
+      "state_bytes": 4963,
+      "supersteps": 2
+    },
+    {
+      "checkpoint_writes": 6,
+      "crash_kept_document_hash": true,
+      "crash_resumes_at": [
+        "assess_risk"
+      ],
+      "mode": "async",
+      "notes_written": 1,
+      "paused_at": [
+        "human_gate"
+      ],
+      "pending_write_batches": 7,
+      "resumed": true,
+      "reviewer_calls_before_resume": 1,
+      "reviewer_calls_total": 1,
+      "state_bytes": 4964,
+      "supersteps": 6
+    },
+    {
+      "checkpoint_writes": 6,
+      "crash_kept_document_hash": true,
+      "crash_resumes_at": [
+        "assess_risk"
+      ],
+      "mode": "sync",
+      "notes_written": 1,
+      "paused_at": [
+        "human_gate"
+      ],
+      "pending_write_batches": 7,
+      "resumed": true,
+      "reviewer_calls_before_resume": 1,
+      "reviewer_calls_total": 1,
+      "state_bytes": 4963,
+      "supersteps": 6
+    }
+  ],
+  "load": {
+    "checkpoint_writes_total": 566,
+    "notes_total": 100,
+    "replay_rate": 0.0,
+    "resume_success_rate": 1.0,
+    "runs": 100,
+    "state_bytes_max": 4963,
+    "state_bytes_mean": 3402
+  }
+}

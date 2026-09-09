@@ -1,0 +1,49 @@
+# `docker compose up` brings up Postgres and the service together.
+#
+# The database is not a detail of the deployment here — it is where a paused
+# review lives. Running the service without it would give a flow that works
+# until the first risky contract and then loses the approval on restart.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: contract
+      POSTGRES_PASSWORD: contract
+      POSTGRES_DB: contract
+    ports:
+      # Overridable because 5432 is often already taken by a local Postgres,
+      # and the failure when it is looks like an authentication error against
+      # this container rather than a connection to a different server.
+      - "${CONTRACT_DB_PORT:-5432}:5432"
+    volumes:
+      - checkpoints:/var/lib/postgresql/data
+    healthcheck:
+      # The service waits for this rather than for the port: Postgres accepts
+      # connections for a second or two before it will answer a query, and
+      # `setup()` runs DDL on the very first one.
+      test: ["CMD-SHELL", "pg_isready -U contract -d contract"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build: .
+    command: uvicorn aimai_workflows.contract.api:app --host 0.0.0.0 --port 8000
+    environment:
+      CONTRACT_DB_DSN: postgresql://contract:contract@postgres:5432/contract?sslmode=disable
+      CONTRACT_DOCUMENT_ROOT: /app/fixtures
+      CONTRACT_CRM_DB: /app/data/crm.sqlite3
+      # Swap for a real model by setting CONTRACT_MODEL and the matching key.
+      CONTRACT_CHECKPOINTER: postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - crm:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  checkpoints:
+  crm:

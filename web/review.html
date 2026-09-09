@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contract review</title>
+<style>
+  :root { color-scheme: light dark; --line: #d8d8d8; --bad: #b3261e; --ok: #1e6b34; }
+  body { font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; margin: 0 auto; max-width: 60rem; padding: 2rem 1rem; }
+  h1 { font-size: 1.3rem; margin: 0 0 1rem; }
+  form.lookup { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+  input, select, textarea, button { font: inherit; padding: .4rem .6rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: .5rem; text-align: left; vertical-align: top; }
+  th { font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+  td.quote { font-family: ui-monospace, monospace; font-size: .8rem; color: #555; }
+  .risk-critical, .risk-high { color: var(--bad); font-weight: 600; }
+  .actions { display: flex; gap: .75rem; margin-top: 1.5rem; }
+  .banner { padding: .75rem 1rem; border: 1px solid var(--line); border-left-width: 4px; margin: 1rem 0; }
+  .banner.done { border-left-color: var(--ok); }
+  .banner.wait { border-left-color: #b58900; }
+  .banner.error { border-left-color: var(--bad); }
+  code { background: rgba(127,127,127,.15); padding: .1rem .3rem; }
+</style>
+</head>
+<body>
+<h1>Contract review</h1>
+
+<form class="lookup" onsubmit="event.preventDefault(); load();">
+  <input id="contract" placeholder="Contract number, e.g. SUP-2025-0042" size="34" required>
+  <button type="submit">Open</button>
+</form>
+
+<div id="out"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let current = null;
+
+async function api(path, options) {
+  const response = await fetch(path, options);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.detail || response.statusText);
+  return body;
+}
+
+async function load() {
+  const no = $("contract").value.trim();
+  try {
+    current = await api(`/reviews/${encodeURIComponent(no)}`);
+    render();
+  } catch (error) {
+    $("out").innerHTML = `<div class="banner error">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+// Severity is edited in place: the reviewer's correction goes back through the
+// same reducer the model's output does, so "the human disagreed" and "the
+// model said" are the same kind of write.
+function render() {
+  const s = current;
+  const waiting = s.status === "awaiting_approval";
+  const rows = (s.findings || []).map((f, i) => `
+    <tr>
+      <td><code>${escapeHtml(f.clause_id)}</code></td>
+      <td>${escapeHtml(f.category)}</td>
+      <td class="risk-${escapeHtml(f.severity)}">
+        ${waiting ? severitySelect(i, f.severity) : escapeHtml(f.severity)}
+      </td>
+      <td>${escapeHtml(f.summary)}</td>
+      <td class="quote">${escapeHtml(f.quote)}</td>
+    </tr>`).join("");
+
+  $("out").innerHTML = `
+    <div class="banner ${waiting ? "wait" : "done"}">
+      <strong>${escapeHtml(s.contract_no)}</strong> — ${escapeHtml(s.status)}
+      ${s.overall_risk ? ` · risk <span class="risk-${escapeHtml(s.overall_risk)}">${escapeHtml(s.overall_risk)}</span>` : ""}
+      ${s.action_receipt ? ` · CRM note <code>${escapeHtml(s.action_receipt)}</code>` : ""}
+      ${s.decision ? ` · decision <strong>${escapeHtml(s.decision)}</strong>` : ""}
+      <div>${escapeHtml(s.question || s.summary || "")}</div>
+      ${s.text_sha256 ? `<div><small>document sha256 <code>${escapeHtml(s.text_sha256.slice(0, 16))}</code></small></div>` : ""}
+    </div>
+    ${rows ? `<table><thead><tr><th>Clause</th><th>Category</th><th>Severity</th><th>Summary</th><th>Quote from the contract</th></tr></thead><tbody>${rows}</tbody></table>` : "<p>No findings.</p>"}
+    ${waiting ? `
+      <textarea id="note" rows="2" style="width:100%" placeholder="Note (optional; required in spirit for a rejection)"></textarea>
+      <div class="actions">
+        <button onclick="decide('approve')">Approve and write the CRM note</button>
+        <button onclick="decide('edit')">Save corrections and approve</button>
+        <button onclick="decide('reject')">Reject</button>
+      </div>` : ""}
+  `;
+}
+
+function severitySelect(index, value) {
+  const options = ["low", "medium", "high", "critical"]
+    .map((s) => `<option ${s === value ? "selected" : ""}>${s}</option>`)
+    .join("");
+  return `<select id="sev-${index}">${options}</select>`;
+}
+
+async function decide(decision) {
+  const payload = { decision, note: $("note")?.value || "" };
+  if (decision === "edit") {
+    payload.findings = current.findings.map((f, i) => ({
+      ...f,
+      severity: $(`sev-${i}`).value,
+    }));
+  }
+  try {
+    current = await api(`/reviews/${encodeURIComponent(current.contract_no)}/decision`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    render();
+  } catch (error) {
+    $("out").insertAdjacentHTML("afterbegin",
+      `<div class="banner error">${escapeHtml(error.message)}</div>`);
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[c]);
+}
+</script>
+</body>
+</html>
