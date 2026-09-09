@@ -1,0 +1,46 @@
+[
+  {
+    "midrun_recovered": true,
+    "midrun_repeated_model_calls": 1,
+    "midrun_status": "awaiting_approval",
+    "note": "resumed at the unfinished step",
+    "parked_receipt": "reply-e70882f96028c9361520f46f",
+    "parked_recovered": true,
+    "parked_replies": 1,
+    "paused_state_bytes": 461,
+    "stack": "plain"
+  },
+  {
+    "midrun_recovered": true,
+    "midrun_repeated_model_calls": 1,
+    "midrun_status": "awaiting_approval",
+    "note": "resumed at the unfinished step",
+    "parked_receipt": "reply-e70882f96028c9361520f46f",
+    "parked_recovered": true,
+    "parked_replies": 1,
+    "paused_state_bytes": 4950,
+    "stack": "langgraph"
+  },
+  {
+    "midrun_recovered": true,
+    "midrun_repeated_model_calls": 2,
+    "midrun_status": "awaiting_approval",
+    "note": "no mid-run state; the run restarted",
+    "parked_receipt": "reply-e70882f96028c9361520f46f",
+    "parked_recovered": true,
+    "parked_replies": 1,
+    "paused_state_bytes": 4364,
+    "stack": "pydantic-ai"
+  },
+  {
+    "midrun_recovered": true,
+    "midrun_repeated_model_calls": 2,
+    "midrun_status": "awaiting_approval",
+    "note": "no mid-run state; the run restarted",
+    "parked_receipt": "reply-e70882f96028c9361520f46f",
+    "parked_recovered": true,
+    "parked_replies": 1,
+    "paused_state_bytes": 11427,
+    "stack": "openai-agents"
+  }
+]

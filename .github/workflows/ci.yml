@@ -96,12 +96,19 @@ jobs:
       - name: Regenerate the measurements
         run: uv run python scripts/measure.py --runs 100
 
+      - name: Benchmark the four stacks
+        run: uv run stack-bench
+
+      - name: Kill each stack's worker at two points
+        run: uv run python -m aimai_workflows.stacks.chaos
+
       - name: Fail if a pinned measurement changed
-        # Only the deterministic file is diffed. Timings differ between
-        # machines; write counts and replay rates do not.
+        # Only the deterministic files are diffed. Timings differ between
+        # machines; write counts, replay rates, line counts and duplicate-send
+        # counts do not.
         run: |
-          if ! git diff --quiet -- results/durability.json; then
+          if ! git diff --quiet -- results/durability.json results/bench.json; then
             echo "A pinned measurement changed but the committed result was not updated:"
-            git diff -- results/durability.json
+            git diff -- results/durability.json results/bench.json
             exit 1
           fi

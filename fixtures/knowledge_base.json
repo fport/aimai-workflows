@@ -1,0 +1,130 @@
+[
+  {
+    "article_id": "bill-01",
+    "title": "How billing periods work",
+    "keywords": [
+      "invoice",
+      "billing",
+      "period",
+      "charge"
+    ],
+    "body": "Invoices are issued on the first of each month for the previous month. A period always runs from the first to the last day of a calendar month."
+  },
+  {
+    "article_id": "bill-02",
+    "title": "Changing your payment method",
+    "keywords": [
+      "card",
+      "payment",
+      "expired",
+      "declined"
+    ],
+    "body": "Payment methods are changed under Settings → Billing. A declined card is retried three times over five days before the account is suspended."
+  },
+  {
+    "article_id": "refu-01",
+    "title": "Refund policy",
+    "keywords": [
+      "refund",
+      "money back",
+      "reimburse"
+    ],
+    "body": "Refunds are available within 14 days of a charge for unused subscription time. Refunds are approved by a person; support cannot promise one."
+  },
+  {
+    "article_id": "refu-02",
+    "title": "Duplicate charges",
+    "keywords": [
+      "duplicate",
+      "charged twice",
+      "double"
+    ],
+    "body": "A duplicate charge is reversed automatically within five working days. If it has been longer, the ticket goes to billing operations."
+  },
+  {
+    "article_id": "tech-01",
+    "title": "API rate limits",
+    "keywords": [
+      "rate limit",
+      "429",
+      "throttle",
+      "quota"
+    ],
+    "body": "The API allows 600 requests per minute per token. A 429 response carries a Retry-After header; clients should honour it rather than retrying at once."
+  },
+  {
+    "article_id": "tech-02",
+    "title": "Webhook delivery",
+    "keywords": [
+      "webhook",
+      "callback",
+      "not received",
+      "delivery"
+    ],
+    "body": "Webhooks are retried for 24 hours with exponential backoff. Deliveries are visible under Settings → Webhooks → Recent deliveries."
+  },
+  {
+    "article_id": "tech-03",
+    "title": "Import failures",
+    "keywords": [
+      "import",
+      "csv",
+      "upload",
+      "failed"
+    ],
+    "body": "Imports fail when a CSV has more than 50,000 rows or an unrecognised column. The error report lists the first 100 offending rows."
+  },
+  {
+    "article_id": "acco-01",
+    "title": "Resetting your password",
+    "keywords": [
+      "password",
+      "reset",
+      "locked out",
+      "login"
+    ],
+    "body": "A password reset link is sent from the sign-in page and is valid for one hour. Accounts lock for 15 minutes after five failed attempts."
+  },
+  {
+    "article_id": "acco-02",
+    "title": "Adding and removing seats",
+    "keywords": [
+      "seat",
+      "user",
+      "invite",
+      "remove"
+    ],
+    "body": "Seats are added under Settings → Team. Removing a seat takes effect at the end of the current billing period."
+  },
+  {
+    "article_id": "acco-03",
+    "title": "Two-factor authentication",
+    "keywords": [
+      "2fa",
+      "two-factor",
+      "authenticator"
+    ],
+    "body": "Two-factor authentication is enabled per user. Recovery codes are shown once; support cannot retrieve them and cannot disable 2FA on request."
+  },
+  {
+    "article_id": "comp-01",
+    "title": "Escalating a complaint",
+    "keywords": [
+      "complaint",
+      "unacceptable",
+      "escalate"
+    ],
+    "body": "Complaints are acknowledged within one working day and answered by a named person within five."
+  },
+  {
+    "article_id": "comp-02",
+    "title": "Service credits",
+    "keywords": [
+      "credit",
+      "sla",
+      "downtime",
+      "outage"
+    ],
+    "body": "Service credits for SLA breaches are calculated monthly and applied to the next invoice. Credits are not paid out in cash."
+  }
+]

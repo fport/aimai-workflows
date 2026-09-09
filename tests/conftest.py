@@ -18,6 +18,7 @@ from aimai_kit.prompts import PromptRegistry
 
 from aimai_workflows.contract import RuleBasedReviewer, compile_graph, reset_crm
 from aimai_workflows.contract.checkpointer import in_memory_checkpointer
+from aimai_workflows.stacks.core import reset_outbox
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = REPO_ROOT / "fixtures"
@@ -25,10 +26,18 @@ FIXTURES = REPO_ROOT / "fixtures"
 
 @pytest.fixture(autouse=True)
 def isolated_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Point the CRM and the document root somewhere disposable."""
+    """Point every durable store at somewhere disposable.
+
+    Both stages write to SQLite on purpose — the crash tests need a store that
+    outlives a killed process — so both need redirecting, or a test run would
+    leave notes in the file a developer's own run reads.
+    """
     monkeypatch.setenv("CONTRACT_CRM_DB", str(tmp_path / "crm.sqlite3"))
     monkeypatch.setenv("CONTRACT_DOCUMENT_ROOT", str(FIXTURES))
+    monkeypatch.setenv("SUPPORT_STATE_DIR", str(tmp_path))
+    monkeypatch.setenv("SUPPORT_OUTBOX_DB", str(tmp_path / "outbox.sqlite3"))
     reset_crm()
+    reset_outbox()
 
 
 @pytest.fixture
@@ -70,6 +79,19 @@ def new_graph(registry: PromptRegistry, checkpointer, **kwargs):
     is how a redeploy looks from the checkpointer's side.
     """
     return compile_graph(RuleBasedReviewer(**kwargs), checkpointer, registry=registry)
+
+
+@pytest.fixture(params=["plain", "langgraph", "pydantic-ai", "openai-agents"])
+def stack(request, registry):
+    """Every stack, one at a time, behind the same two verbs.
+
+    Parametrized rather than four near-identical test modules: the contract is
+    the claim, and a suite that lets one stack have its own tests would let it
+    have its own behaviour.
+    """
+    from aimai_workflows.stacks.bench import stack_factories
+
+    return stack_factories()[request.param](None, registry)
 
 
 os.environ.setdefault("LANGGRAPH_STRICT_MSGPACK", "true")

@@ -1,0 +1,46 @@
+[
+  {
+    "completed": 50,
+    "duplicate_sends": 0,
+    "escalated": 15,
+    "llm_calls": 100,
+    "orchestration_lines": 160,
+    "replies_sent": 50,
+    "resumed_after_restart": 15,
+    "seconds": null,
+    "stack": "plain"
+  },
+  {
+    "completed": 50,
+    "duplicate_sends": 0,
+    "escalated": 15,
+    "llm_calls": 100,
+    "orchestration_lines": 151,
+    "replies_sent": 50,
+    "resumed_after_restart": 15,
+    "seconds": null,
+    "stack": "langgraph"
+  },
+  {
+    "completed": 50,
+    "duplicate_sends": 0,
+    "escalated": 15,
+    "llm_calls": 300,
+    "orchestration_lines": 259,
+    "replies_sent": 50,
+    "resumed_after_restart": 15,
+    "seconds": null,
+    "stack": "pydantic-ai"
+  },
+  {
+    "completed": 50,
+    "duplicate_sends": 0,
+    "escalated": 15,
+    "llm_calls": 300,
+    "orchestration_lines": 255,
+    "replies_sent": 50,
+    "resumed_after_restart": 15,
+    "seconds": null,
+    "stack": "openai-agents"
+  }
+]
