@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 176" width="620" height="176" role="img" aria-label="aimai-workflows">
+  <rect width="620" height="176" rx="20" fill="#0D0D0D"/>
+  <g transform="translate(24, 26)">
+  <path d="M14.0,48.4 Q27.3,31.2 40.6,23.4" fill="none" stroke="#5FA82F" stroke-width="1.7" stroke-linecap="round" opacity="0.85"/>
+  <path d="M14.0,48.4 Q27.3,65.5 40.6,73.3" fill="none" stroke="#5FA82F" stroke-width="1.7" stroke-linecap="round" opacity="0.85"/>
+  <path d="M40.6,23.4 Q60.8,31.2 81.1,48.4" fill="none" stroke="#5FA82F" stroke-width="1.7" stroke-linecap="round" opacity="0.85"/>
+  <path d="M40.6,73.3 Q53.8,78.0 67.1,73.3" fill="none" stroke="#5FA82F" stroke-width="1.7" stroke-linecap="round" opacity="0.85"/>
+  <path d="M67.1,73.3 Q74.1,65.5 81.1,48.4" fill="none" stroke="#5FA82F" stroke-width="1.7" stroke-linecap="round" opacity="0.85"/>
+  <path d="M81.1,48.4 Q94.4,53.0 107.6,48.4" fill="none" stroke="#5FA82F" stroke-width="1.7" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="14.0" cy="48.4" r="5.9" fill="#8FE64A" stroke="#8FE64A" stroke-width="1.9"/>
+  <circle cx="40.6" cy="23.4" r="4.7" fill="#0D0D0D" stroke="#8FE64A" stroke-width="1.9"/>
+  <circle cx="40.6" cy="73.3" r="4.7" fill="#0D0D0D" stroke="#8FE64A" stroke-width="1.9"/>
+  <rect x="62.9" y="69.1" width="8.4" height="8.4" rx="1.6" fill="#0D0D0D" stroke="#8FE64A" stroke-width="1.9"/>
+  <circle cx="81.1" cy="48.4" r="4.7" fill="#0D0D0D" stroke="#8FE64A" stroke-width="1.9"/>
+  <circle cx="107.6" cy="48.4" r="5.9" fill="#8FE64A" stroke="#8FE64A" stroke-width="1.9"/>
+  </g>
+  <text x="192" y="86" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="46" font-weight="700" fill="#E8E8E8">aimai<tspan fill="#8FE64A">-workflows</tspan></text>
+  <text x="194" y="120" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" fill="#9BA3AF">stateful agent workflows</text>
+</svg>

@@ -1,4 +1,6 @@
-# aimai-workflows
+<p align="center">
+  <img src="https://raw.githubusercontent.com/fport/aimai-workflows/main/assets/header.png" alt="aimai-workflows" width="860">
+</p>
 
 [![CI](https://github.com/fport/aimai-workflows/actions/workflows/ci.yml/badge.svg)](https://github.com/fport/aimai-workflows/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-8FE64A)](pyproject.toml)
@@ -6,6 +8,11 @@
 
 Stateful agent workflows, in three stages that answer three different
 questions.
+
+**Documentation: [fport.github.io/aimai-workflows](https://fport.github.io/aimai-workflows/)**
+— the reasoning behind every stage, with the measurements. Available in
+[English](https://fport.github.io/aimai-workflows/) and
+[Türkçe](https://fport.github.io/aimai-workflows/tr/).
 
 | Stage | Package | The question it answers |
 |---|---|---|

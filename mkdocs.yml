@@ -1,0 +1,113 @@
+site_name: aimai-workflows
+site_description: Stateful agent workflows — durable state, four stacks compared, and a DAG runner
+site_url: https://fport.github.io/aimai-workflows/
+repo_url: https://github.com/fport/aimai-workflows
+repo_name: fport/aimai-workflows
+edit_uri: edit/main/docs/
+copyright: MIT licensed
+
+theme:
+  name: material
+  language: en
+  logo: assets/icon.png
+  favicon: assets/icon.png
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    # Dark first, matching aimai-kit: the two sites are one body of work.
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: lime
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: lime
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  features:
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+    - search.highlight
+    - search.suggest
+
+extra_css:
+  - stylesheets/neon.css
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: ["snippets"]
+      check_paths: true
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: tr
+          name: Türkçe
+          build: true
+          nav_translations:
+            Start here: Buradan başla
+            Overview: Genel bakış
+            Stages: Aşamalar
+            "06. Durable state and a human gate": "06. Kalıcı state ve insan onayı"
+            "07. Four stacks, one flow": "07. Tek akış, dört stack"
+            "08. Writing the coordination layer": "08. Koordinasyon katmanını yazmak"
+            Measurements: Ölçümler
+            Production checklist: Proda çıkmadan checklist
+
+nav:
+  - Start here:
+      - Overview: index.md
+  - Stages:
+      - "06. Durable state and a human gate": 06-contract-graph.md
+      - "07. Four stacks, one flow": 07-workflow-stacks.md
+      - "08. Writing the coordination layer": 08-dag-orchestrator.md
+  - Measurements: measurements.md
+  - Production checklist: checklist.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/fport/aimai-workflows
+    - icon: material/toolbox
+      link: https://github.com/fport/aimai-kit

@@ -82,7 +82,7 @@ build-backend = "hatchling.build"
 packages = ["src/aimai_workflows"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src", "tests", "fixtures", "web", "docs", "README.md"]
+include = ["src", "tests", "fixtures", "prompts", "web", "docs", "assets", "README.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -99,3 +99,8 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# The generator embeds SVG markup in f-strings; wrapping those lines would
+# make the output harder to read, not easier.
+"assets/_generate.py" = ["E501"]

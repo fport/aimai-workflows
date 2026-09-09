@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 440" width="1200" height="440" role="img" aria-label="aimai-workflows — stateful agent workflows">
+  <rect width="1200" height="440" fill="#0D0D0D"/>
+  <g transform="translate(452, 42) scale(1.9)">
+  <path d="M18.0,62.0 Q35.0,40.0 52.0,30.0" fill="none" stroke="#5FA82F" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>
+  <path d="M18.0,62.0 Q35.0,84.0 52.0,94.0" fill="none" stroke="#5FA82F" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>
+  <path d="M52.0,30.0 Q78.0,40.0 104.0,62.0" fill="none" stroke="#5FA82F" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>
+  <path d="M52.0,94.0 Q69.0,100.0 86.0,94.0" fill="none" stroke="#5FA82F" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>
+  <path d="M86.0,94.0 Q95.0,84.0 104.0,62.0" fill="none" stroke="#5FA82F" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>
+  <path d="M104.0,62.0 Q121.0,68.0 138.0,62.0" fill="none" stroke="#5FA82F" stroke-width="2.2" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="18.0" cy="62.0" r="7.5" fill="#8FE64A" stroke="#8FE64A" stroke-width="2.4"/>
+  <circle cx="52.0" cy="30.0" r="6.0" fill="#0D0D0D" stroke="#8FE64A" stroke-width="2.4"/>
+  <circle cx="52.0" cy="94.0" r="6.0" fill="#0D0D0D" stroke="#8FE64A" stroke-width="2.4"/>
+  <rect x="80.6" y="88.6" width="10.8" height="10.8" rx="2.0" fill="#0D0D0D" stroke="#8FE64A" stroke-width="2.4"/>
+  <circle cx="104.0" cy="62.0" r="6.0" fill="#0D0D0D" stroke="#8FE64A" stroke-width="2.4"/>
+  <circle cx="138.0" cy="62.0" r="7.5" fill="#8FE64A" stroke="#8FE64A" stroke-width="2.4"/>
+  </g>
+  <text x="600" y="330" text-anchor="middle" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="62" font-weight="700" fill="#E8E8E8">aimai<tspan fill="#8FE64A">-workflows</tspan></text>
+  <text x="600" y="378" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24" fill="#9BA3AF">durable state · four stacks compared · a DAG runner</text>
+  <text x="600" y="414" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" fill="#5FA82F">153 tests · no API key · no database · no network</text>
+</svg>
