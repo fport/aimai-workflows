@@ -15,11 +15,30 @@ one real flow, and a fifteen-line LangGraph supervisor for comparison.
 
 ## The flow
 
-```text
-extract ──> scope_gate ──> statute  ─┐
-    │           │                    ├──> synthesis ──> deliver ──> archive
-    │           └───────> caselaw ···┘                     ╎
-    └─────> clause_review ───────────┘              retract ╌╌ compensates
+```mermaid
+graph TD
+    extract["extract<br/>task"]
+    scope_gate["scope_gate<br/>gate"]
+    extract --> scope_gate
+    clause_review["clause_review<br/>fanout"]
+    extract --> clause_review
+    scope_gate --> clause_review
+    statute["statute<br/>task"]
+    extract --> statute
+    scope_gate --> statute
+    caselaw["caselaw<br/>task"]
+    extract --> caselaw
+    scope_gate --> caselaw
+    synthesis["synthesis<br/>join"]
+    clause_review --> synthesis
+    statute --> synthesis
+    caselaw -.optional.-> synthesis
+    deliver["deliver<br/>task"]
+    synthesis --> deliver
+    archive["archive<br/>task"]
+    deliver --> archive
+    retract["retract<br/>compensate"]
+    retract -.compensates.-> deliver
 ```
 
 Every node kind earns its place:

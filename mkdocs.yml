@@ -64,7 +64,14 @@ markdown_extensions:
   - pymdownx.snippets:
       base_path: ["snippets"]
       check_paths: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        # Without this, a ```mermaid block renders as highlighted source
+        # instead of a diagram. Material ships the renderer; superfences has to
+        # hand it the block.
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tabbed:

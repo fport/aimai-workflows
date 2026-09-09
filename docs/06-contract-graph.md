@@ -8,10 +8,14 @@ This stage is a four-node flow that reviews a supplier contract and stops for a
 person when the risk is high. The flow is not the interesting part — the state
 being in a database rather than in the process is.
 
-```text
-fetch_document → assess_risk ──[risk ≥ high]──→ human_gate ──[approve|edit]──→ execute_action
-                     │                              │
-                     └────────[risk < high]─────────┴────[reject]────→ END
+```mermaid
+graph LR
+    fetch[fetch_document] --> assess[assess_risk]
+    assess -->|"high or above"| gate{{human_gate}}
+    assess -->|"below high"| act[execute_action]
+    gate -->|"approve · edit"| act
+    gate -->|reject| stop([END])
+    act --> stop
 ```
 
 !!! done "What we built here"

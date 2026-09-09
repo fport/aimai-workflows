@@ -36,10 +36,14 @@ All three stages are complete.
 A four-node LangGraph flow that reviews a supplier contract, stops for a human
 when the risk is high, and writes one note to a CRM.
 
-```text
-fetch_document → assess_risk ──[risk ≥ high]──→ human_gate ──[approve|edit]──→ execute_action
-                     │                              │
-                     └────────[risk < high]─────────┴────[reject]────→ END
+```mermaid
+graph LR
+    fetch[fetch_document] --> assess[assess_risk]
+    assess -->|"high or above"| gate{{human_gate}}
+    assess -->|"below high"| act[execute_action]
+    gate -->|"approve · edit"| act
+    gate -->|reject| stop([END])
+    act --> stop
 ```
 
 The flow is not the interesting part. **The state is in a database, not in the
@@ -263,11 +267,30 @@ uv run dagrun --seed SZL-2026-0431 --fail caselaw    # a degraded opinion
 uv run dagrun --seed SZL-2026-0431 --fail archive    # the saga: retracted
 ```
 
-```text
-extract ──> scope_gate ──> statute  ─┐
-    │           │                    ├──> synthesis ──> deliver ──> archive
-    │           └───────> caselaw ···┘                     ╎
-    └─────> clause_review ───────────┘              retract ╌╌ compensates
+```mermaid
+graph TD
+    extract["extract<br/>task"]
+    scope_gate["scope_gate<br/>gate"]
+    extract --> scope_gate
+    clause_review["clause_review<br/>fanout"]
+    extract --> clause_review
+    scope_gate --> clause_review
+    statute["statute<br/>task"]
+    extract --> statute
+    scope_gate --> statute
+    caselaw["caselaw<br/>task"]
+    extract --> caselaw
+    scope_gate --> caselaw
+    synthesis["synthesis<br/>join"]
+    clause_review --> synthesis
+    statute --> synthesis
+    caselaw -.optional.-> synthesis
+    deliver["deliver<br/>task"]
+    synthesis --> deliver
+    archive["archive<br/>task"]
+    deliver --> archive
+    retract["retract<br/>compensate"]
+    retract -.compensates.-> deliver
 ```
 
 Every node kind earns its place: `scope_gate` is a GATE because an out-of-scope
