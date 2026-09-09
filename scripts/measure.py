@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import signal
 import statistics
 import subprocess
@@ -514,9 +515,7 @@ def main() -> int:
     print(
         f"\nwrote results/durability{suffix}.json and results/measurements{suffix}.md"
     )
-    for path in workspace.glob("*"):
-        path.unlink()
-    workspace.rmdir()
+    shutil.rmtree(workspace, ignore_errors=True)
     return 0
 
 

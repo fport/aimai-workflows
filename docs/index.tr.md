@@ -23,7 +23,7 @@ yalnızca orkestrasyonla ilgilenebiliyor.
 ```bash
 git clone https://github.com/fport/aimai-workflows && cd aimai-workflows
 uv sync --all-extras --group dev
-uv run pytest        # 153 test: API anahtarı yok, veritabanı yok, ağ yok
+uv run pytest        # 167 test: API anahtarı yok, veritabanı yok, ağ yok
 ```
 
 Bir LLM çağrısı saniyeler sürer. Bir agent koşusu dakikalar. Bir insan onayı
@@ -44,12 +44,13 @@ günler. Bu depodaki her şey bu aradan çıkıyor.
     yeniden çalıştırır. O çağrının üstüne yazılmış bir side effect her resume'da
     bir kez daha tetiklenir — ve resume tasarımın bütün amacıdır.
 
--   **[07. Tek akış, dört stack](07-workflow-stacks.md)**
+-   **[07. Tek akış, beş stack](07-workflow-stacks.md)**
 
-    Aynı destek akışı saf Python, LangGraph, pydantic-ai ve OpenAI Agents SDK
-    ile; iş mantığı bir kez yazılmış ve dördü de onu import ediyor.
+    Aynı destek akışı saf Python, LangGraph, pydantic-ai, OpenAI Agents SDK ve
+    Strands Agents ile; iş mantığı bir kez yazılmış ve beşi de onu import
+    ediyor.
 
-    *Kapattığı tuzak:* framework'leri dört ayrı program yazarak karşılaştırmak.
+    *Kapattığı tuzak:* framework'leri beş ayrı program yazarak karşılaştırmak.
     O zaman her fark bir implementasyon farkı olur ve tablo hiçbir şey ölçmez.
 
 -   **[08. Koordinasyon katmanını yazmak](08-dag-orchestrator.md)**
@@ -136,8 +137,9 @@ tablolar ve uyarıları **[Ölçümler](measurements.md)** sayfasında.
 |---|---|
 | `SIGKILL` altında `durability` modları | `exit` bütün koşuyu kaybediyor; `sync` yarım kalan node'dan devam ediyor, yazma başına 0,23 ms karşılığında |
 | Gate'in içindeki side effect | Tek onay için iki CRM notu — çalışır bir karşı-kanıt olarak duruyor |
-| Dört stack, 50 talep | İki agent SDK'sı 3× model çağrısı harcıyor; LangGraph state machine'i elle yazmaktan daha az satır tutuyor |
-| Stack başına duraklamış state | 461 B elle yazılan, 4,9 KB LangGraph, 4,4 KB pydantic-ai, 11,4 KB Agents SDK |
+| Beş stack, 50 talep | Üç agent SDK'sı da 3× model çağrısı harcıyor; LangGraph state machine'i elle yazmaktan daha az satır tutuyor |
+| Stack başına duraklamış state | 461 B elle yazılan, 4,9 KB LangGraph, 4,4 KB pydantic-ai, 6,0 KB Strands, 11,4 KB Agents SDK |
+| Koşu ortasında `SIGKILL` | Strands hiçbir şeyi tekrarlamıyor; graf sürümleri bir çağrı; diğer iki agent SDK'sı baştan başlıyor |
 | DAG yeniden çalıştırma | Yeniden koşunun harcamasının %100'ü store'dan geliyor |
 | Degradation | 100 işin 13'ü kısmi kanıtla teslim edildi — ve bunu görüşün içinde söyledi |
 

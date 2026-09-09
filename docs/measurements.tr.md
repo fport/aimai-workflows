@@ -99,7 +99,7 @@ uv run python scripts/kill_mid_run.py
 
 ---
 
-## 07 — dört stack
+## 07 — beş stack
 
 ```bash
 uv run stack-bench                              # results/bench.md
@@ -110,10 +110,11 @@ uv run python -m aimai_workflows.stacks.chaos   # results/chaos.md
 
 | Stack | tamamlanan | onaya düşen | restart sonrası devam | çift gönderim | llm çağrısı | orkestrasyon satırı | saniye |
 |---|---|---|---|---|---|---|---|
-| saf Python | 50 | 15 | 15 | 0 | 100 | 160 | 0,25 |
-| LangGraph | 50 | 15 | 15 | 0 | 100 | 151 | 0,24 |
-| pydantic-ai | 50 | 15 | 15 | 0 | 300 | 259 | 0,66 |
-| OpenAI Agents SDK | 50 | 15 | 15 | 0 | 300 | 255 | 0,46 |
+| saf Python | 50 | 15 | 15 | 0 | 100 | 160 | 0,20 |
+| LangGraph | 50 | 15 | 15 | 0 | 100 | 151 | 0,20 |
+| pydantic-ai | 50 | 15 | 15 | 0 | 300 | 259 | 0,42 |
+| OpenAI Agents SDK | 50 | 15 | 15 | 0 | 300 | 255 | 0,40 |
+| Strands Agents | 50 | 15 | 15 | 0 | 300 | 255 | 0,51 |
 
 `tamamlanan`, outbox'ta en az bir cevabı olan talepleri sayıyor; `çift
 gönderim` müşterinin alacağı fazla satırları. İkisi de bir stack'in kendisi
@@ -127,17 +128,21 @@ satırlarını saymak, en çok açıklamaya ihtiyacı olan sürümü ödüllendi
 | Stack | Gate'te öldürüldü → onaylandı mı? | Gönderilen cevap | Duraklamış state | Koşu ortasında öldürüldü → devam? | Tekrarlanan model çağrısı |
 |---|---|---|---|---|---|
 | saf Python | evet | 1 | 461 B | evet | 1 |
-| LangGraph | evet | 1 | 4.953 B | evet | 1 |
+| LangGraph | evet | 1 | 4.966 B | evet | 1 |
 | pydantic-ai | evet | 1 | 4.364 B | evet | 2 |
 | OpenAI Agents SDK | evet | 1 | 11.427 B | evet | 2 |
+| Strands Agents | evet | 1 | 5.996 B | evet | 0 |
 
 `Duraklamış state`, her stack'in duraklamış tek bir talep için yazdığı bütün
-text ve blob kolonları — bir koşuyu insan beklerken tutmanın maliyeti. Uçta yirmi
-beş katı depolama: 50 talepte önemsiz, 50.000 açık onayda konuşulacak bir konu.
+text ve blob kolonları ile varsa JSON session dosyalarının boyutu — bir koşuyu
+insan beklerken tutmanın maliyeti. Uçta yirmi beş katı depolama: 50 talepte
+önemsiz, 50.000 açık onayda konuşulacak bir konu.
 
 `Tekrarlanan model çağrısı`, devralan süreçte paylaşılan iş mantığına yapılan
-çağrıları sayıyor. Bir, öldürmeden önceki işin yeniden kullanıldığı; iki, akışın
-baştan başladığı anlamına geliyor.
+çağrıları sayıyor. İki, akışın baştan başladığı; bir, öldürmeden önceki işin
+yeniden kullanıldığı; **sıfır ise biten her tool sonucunun hayatta kaldığı**
+anlamına geliyor — bunu yalnızca Strands başarıyor, çünkü session manager her
+sonucu düştüğü anda kalıcılaştırıyor.
 
 ---
 

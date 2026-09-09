@@ -1,8 +1,8 @@
-# 7. Tek akış, dört stack
+# 7. Tek akış, beş stack
 
-Aynı destek akışı dört kez yazıldı — saf Python, LangGraph, pydantic-ai, OpenAI
-Agents SDK — ki "hangi framework" sorusu bir görüş olmaktan çıkıp bir tabloya
-dönüşsün.
+Aynı destek akışı beş kez yazıldı — saf Python, LangGraph, pydantic-ai, OpenAI
+Agents SDK, Strands Agents — ki "hangi framework" sorusu bir görüş olmaktan
+çıkıp bir tabloya dönüşsün.
 
 Bir talebi sınıflandır, bilgi tabanından madde getir, taslak cevap üret, talep
 riskliyse insana dur, gönder. Beş adım, ve dördüncüsü bütün karşılaştırmayı
@@ -12,18 +12,18 @@ her birinde tamamen farklı görünüyor.
 
 !!! done "Burada ne kurduk"
 
-    İş mantığını tutan tek bir `core.py`, onu import eden dört orkestrasyon
-    modülü, dördünün de geçtiği tek bir parametrize test paketi, 50 talep
+    İş mantığını tutan tek bir `core.py`, onu import eden beş orkestrasyon
+    modülü, beşinin de geçtiği tek bir parametrize test paketi, 50 talep
     üzerinde bir benchmark ve her stack'in worker'ını iki ayrı noktada öldüren
     bir chaos script'i.
 
 ## Bunu karşılaştırma yapan kural
 
 **İş mantığı bir kez yazılıyor.** `stacks/core.py` sınıflandırmayı, retrieval'ı,
-taslak üretimini, risk kuralını ve gönderimi tutuyor; dört stack de onu import
-ediyor. Dört dosya arasındaki fark orkestrasyon farkı ve başka hiçbir şey değil.
+taslak üretimini, risk kuralını ve gönderimi tutuyor; beş stack de onu import
+ediyor. Beş dosya arasındaki fark orkestrasyon farkı ve başka hiçbir şey değil.
 
-İş mantığı dört kez yazılsaydı benchmark'taki her sayı, aynı fikrin dört hafif
+İş mantığı beş kez yazılsaydı benchmark'taki her sayı, aynı fikrin beş hafif
 farklı implementasyonu tarafından bulandırılırdı — internetteki çoğu framework
 karşılaştırmasının farkında olmadan ölçtüğü şey budur.
 
@@ -34,10 +34,10 @@ Söylenmeye değer iki sonuç:
   System prompt'u bir decorator argümanında isteyen bir framework, render
   edilmiş metni alıyor. Lock-in'in pratik ölçüsü budur.
 - **Risk eşiği `core` içinde tek bir sabit.** Her stack riski kendi yöntemiyle
-  karar verseydi, benchmark'ın "onaya düşen" sütunu dört orkestratörü değil dört
+  karar verseydi, benchmark'ın "onaya düşen" sütunu beş orkestratörü değil beş
   kuralı karşılaştırırdı.
 
-## Dört sürüm, kendi ifadeleriyle
+## Beş sürüm, kendi ifadeleriyle
 
 === "saf Python"
 
@@ -137,6 +137,44 @@ Söylenmeye değer iki sonuç:
     bilinçli ve görünür şekilde, çünkü koşularını sessizce bir sağlayıcıya
     yükleyen bir karşılaştırma reposu bir şeyi ölçüp başka bir şey yapıyordur.
 
+=== "Strands Agents"
+
+    Deseni bozan sürüm: **sıraya model karar veriyor, state'i framework
+    tutuyor.**
+
+    ```python
+    @tool(context=True)
+    def deliver(ticket_id: str, tool_context: ToolContext) -> str:
+        """Taslak cevabı müşteriye gönder."""
+        if is_risky(ticket, classification):
+            decision = tool_context.interrupt(
+                name="approve_send",
+                reason={"ticket_id": ticket_id, "question": "Send this reply?"},
+            )
+            if decision != "approve":
+                return "rejected by the reviewer"
+        return send_reply(ticket_id, draft["text"], stack=NAME).idempotency_key
+    ```
+
+    Koşu `stop_reason="interrupt"` ile bitiyor, session manager bekleyen tool
+    yürütmesini diske yazıyor ve resume birinci sınıf bir girdi:
+    `agent([{"interruptResponse": {"interruptId": …, "response": "approve"}}])`.
+
+    **Aynı session ile kurulan yepyeni bir agent zaten duraklamış hâlde
+    geliyor.** "State'i yeniden kurabilirsin" değil — `Agent` inşa edilirken
+    geri yükleniyor. pydantic-ai ve Agents SDK'nın sana bıraktığı şey bu, ve bu
+    sürümün koşu ortasındaki bir kill'den sonra *hiçbir şeyi* tekrarlamamasının
+    sebebi de bu; diğer her sürüm en az bir çağrı tekrarlıyor.
+
+    Tool'un içinde LangGraph'takiyle aynı kural geçerli: tool ilk satırından
+    itibaren yeniden çalışıyor, bu yüzden gönderim `interrupt()` çağrısının
+    altında duruyor.
+
+    Session bir JSON dizini — `session.json`, `agent.json`, mesaj başına bir
+    dosya — yani duraklamış bir koşu olay anında bir insan tarafından
+    okunabiliyor. Mesaj geçmişinden büyük, `RunState` blob'undan çok küçük ve
+    üçü arasında gece 3'te açmak isteyeceğin tek format.
+
 ## Benchmark
 
 50 sentetik talep, aynı sıra, aynı deterministik model, her stack için üç geçiş:
@@ -149,10 +187,11 @@ hiçbir şeyi iki kez göndermediği görülsün.
 | LangGraph | 50 | 15 | 15 | 0 | 100 | **151** |
 | pydantic-ai | 50 | 15 | 15 | 0 | **300** | 259 |
 | OpenAI Agents SDK | 50 | 15 | 15 | 0 | **300** | 255 |
+| Strands Agents | 50 | 15 | 15 | 0 | **300** | 255 |
 
 Açıkça söylenmeye değer iki bulgu.
 
-**Üç katı model çağrısı.** İki agent sürümü, iş mantığının yaptığı iki çağrının
+**Üç katı model çağrısı.** Üç agent sürümü de, iş mantığının yaptığı iki çağrının
 üstüne tool çağrısı başına bir model turn'ü harcıyor — model sırada ne
 yapılacağına karar veriyor ve o karar bir istek. Şekli hiç değişmeyen beş
 adımlık bir akış için 50 talep başına 200 fazla çağrı hiçbir şey satın almadı.
@@ -174,23 +213,30 @@ harcıyor — bir checkpointer'ın yazmış olacağı koda.
 | Stack | Gate'te öldürüldü → onaylandı mı? | Duraklamış state | Koşu ortasında öldürüldü → devam? | Tekrarlanan model çağrısı |
 |---|---|---|---|---|
 | saf Python | evet | 461 B | evet | 1 — yarım kalan adımdan devam |
-| LangGraph | evet | 4.953 B | evet | 1 — yarım kalan adımdan devam |
+| LangGraph | evet | 4.966 B | evet | 1 — yarım kalan adımdan devam |
 | pydantic-ai | evet | 4.364 B | evet | 2 — koşu ortası state yok; baştan başladı |
 | OpenAI Agents SDK | evet | 11.427 B | evet | 2 — koşu ortası state yok; baştan başladı |
+| Strands Agents | evet | 5.996 B | evet | **0 — hiçbir şey tekrarlanmadı** |
 
-Dördü de **gate'te duraklarken** öldürülmeyi atlatıyor ve hiçbiri geri
-döndüğünde çift cevap göndermiyor. Çıta bu ve dördü de aşıyor.
+Beşi de **gate'te duraklarken** öldürülmeyi atlatıyor ve hiçbiri geri
+döndüğünde çift cevap göndermiyor. Çıta bu ve beşi de aşıyor.
 
-**Koşu ortasında** öldürülmede ayrışıyorlar. Adım başına state yazan iki sürüm
-yarım kalan adımdan devam ediyor; iki agent sürümünün "koşu başladı" ile "koşu
-döndü" arasında hiçbir şeyi yok, bu yüzden işi tekrarlıyorlar.
+**Koşu ortasında** öldürülmede ayrışıyorlar — ve iki değil üç gruba.
+
+Adım başına state yazan iki sürüm yarım kalan adımdan devam ediyor, bir çağrı
+tekrarlıyor. pydantic-ai ve Agents SDK'nın "koşu başladı" ile "koşu döndü"
+arasında hiçbir şeyi yok, bu yüzden işi tekrarlıyorlar. Strands hiçbir şeyi
+tekrarlamıyor: session manager her tool sonucunu düştüğü anda kalıcılaştırıyor,
+yani yeniden başlayan worker sınıflandırma *ve* taslak hazır hâlde geliyor —
+iki graf sürümünün ulaştığından daha ince bir granülarite, ve burada yazılmış
+bir şey değil SDK'nın varsayılanı.
 
 !!! warning "\"Resume ediyor mu\" sorusunun dürüst cevabı"
 
-    İki framework de koşu ortasında checkpoint alabiliyor — pydantic-ai
-    `agent.iter()` ile, Agents SDK turn başına `to_state()` ile. Hiçbiri bunu
-    senin yerine yapmıyor ve bu depo da yazmadı. Yani: evet, yazmaya razı
-    olduğun granülaritede.
+    pydantic-ai ve Agents SDK koşu ortasında checkpoint alabiliyor — sırasıyla
+    `agent.iter()` ve turn başına `to_state()` ile. Hiçbiri bunu senin yerine
+    yapmıyor ve bu depo da yazmadı. Yani o ikisi için: evet, yazmaya razı
+    olduğun granülaritede. Strands için cevap koşulsuz, ki mesele de bu.
 
 ## Karar tablosu — maliyet ve kontrol
 
@@ -199,7 +245,8 @@ döndü" arasında hiçbir şeyi yok, bu yüzden işi tekrarlıyorlar.
 | saf Python | 160 | tamamen sen | akış düz bir çizgi, ekip küçük ve bir bağımlılık eklemek gerekçe istiyorsa. Akış değiştirilmekten çok okunacaksa da doğru cevap budur. |
 | LangGraph | 151 | sen, bir topolojide | akış dallanıyor, insanlar için duruyor ya da sonradan incelenebilir olması gerekiyorsa. Onu debug edecek herkesin öğrenmesi gereken bir zihinsel modele mal olur. |
 | pydantic-ai | 259 | tipli tool'lar içinde model | kod tabanı zaten pydantic şeklindeyse ve bir runtime benimsemeden tipli tool istiyorsan. State'i sen taşırsın. |
-| OpenAI Agents SDK | 255 | çoğunlukla model | iş gerçekten girdiye göre değişiyorsa, yani sabit bir topoloji yalan olacaksa. Döngü sağlayıcının ve state blob'u taşınmaz. |
+| OpenAI Agents SDK | 255 | çoğunlukla model | iş gerçekten girdiye göre değişiyorsa ve zaten OpenAI üzerindeysen. Döngü sağlayıcının ve state blob'u taşınmaz. |
+| Strands Agents | 255 | çoğunlukla model | iş girdiye göre değişiyorsa **ve** duraklamanın kalıcılığını kendin yazmadan istiyorsan. |
 
 ## Karar tablosu — state, HITL ve lock-in
 
@@ -209,12 +256,15 @@ döndü" arasında hiçbir şeyi yok, bu yüzden işi tekrarlıyorlar.
 | LangGraph | checkpointer (SQLite/Postgres) | `interrupt()` + `Command(resume=…)` | orta: state şeması ve topoloji LangGraph'ın, node'lar değil |
 | pydantic-ai | **senin** serileştirdiğin mesaj geçmişi | `ApprovalRequired` + `DeferredToolResults` | düşük: istediğin yerde tuttuğun JSON |
 | OpenAI Agents SDK | **senin** serileştirdiğin `RunState` blob'u | `needs_approval` + `state.approve()` | en yüksek: blob SDK'nın şeklinde. Okunabilir, taşınabilir değil. |
+| Strands Agents | **SDK'nın yazdığı** bir session | `tool_context.interrupt()` + `interruptResponse` girdisi | orta: format SDK'nın ama dosya sisteminde ya da S3'te düz JSON |
 
 **Trace nereye gidiyor** — bu, sorun olana kadar kimsenin okumadığı bir konu:
 saf Python'da hiç yok. LangGraph `LANGCHAIN_TRACING_V2` set edilmişse
 LangSmith'e gönderiyor, değilse hiçbir yere. pydantic-ai OpenTelemetry
 yayıyor, yapılandırılmadıkça kapalı. Agents SDK varsayılan olarak OpenAI'a
-gönderiyor.
+gönderiyor. Strands OpenTelemetry yayıyor ve `callback_handler=None`
+verilmedikçe stdout'a yazıyor — notebook'ta zararsız, ama sürecin çıktısını
+parse eden her çağıranı bozar.
 
 ## Bugün üretimde hangisini koşardım
 
@@ -223,13 +273,22 @@ satır sayısına mal oluyor ve karşılığında resume yolu, akışla senkron 
 zorunda olduğum bir kod olmuyor. Diğer yarısı state history: bir reviewer ilk
 kez "ben düzeltmeden önce ne demişti" diye sorduğunda saf sürümün cevabı yok.
 
-Burada iki agent SDK'sına da uzanmazdım. Akışın şekli değişmiyor; modelin her
+*Burada* bir agent SDK'sına uzanmazdım. Akışın şekli değişmiyor; modelin her
 talepte o şekli yeniden keşfetmesi için üç katı model çağrısı ödemek, varyans
 eklemek için para harcamaktır.
 
-Fikrimi değiştirecek kısıt, ekibin zaten birinde akıcı olması olurdu. Dördü de
-bu depodaki her testi geçti; yukarıdaki farkların hiçbiri bir ekosistemi
-yeniden öğrenmeye değmez.
+**Şekil gerçekten değiştiğinde Strands'e uzanırdım**, ve sebep benchmark değil
+chaos tablosu. Üç agent SDK'sı model çağrısında aynı, orkestrasyon satırında
+birbirinden dört satır uzakta; ayrıştıkları yer süreç öldüğünde ne olduğu.
+İkisi duraklamış state'i saklamam, geri vermem ve kendi şemamla senkron tutmam
+için bana veriyor — yazmam, test etmem ve yedeklemem gereken bir kalıcılık
+katmanı. Strands onu kalıcılaştırıyor, geri yüklüyor ve adım sınırının altından
+devam ediyor. Bu, "human-in-the-loop destekleniyor" ile "dayanıklı kısmı
+yazdıktan sonra human-in-the-loop destekleniyor" arasındaki fark.
+
+Fikrimi değiştirecek kısıt, ekibin zaten diğerlerinden birinde akıcı olması
+olurdu. Beşi de bu depodaki her testi geçti; yukarıdaki farkların hiçbiri bir
+ekosistemi yeniden öğrenmeye değmez.
 
 ## Checklist
 

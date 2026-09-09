@@ -75,10 +75,17 @@ def paused_state_bytes(directory: Path) -> int:
 
     Summed over every text and blob column of every table the stack wrote,
     rather than the file size: SQLite rounds to 4 KB pages, which would make
-    four very different states look identical. Each directory holds exactly one
-    paused ticket, so this is the per-pause cost.
+    very different states look identical. JSON files are counted by their own
+    length for the same reason — Strands stores a session as a directory of
+    files rather than as rows, and comparing a page-rounded directory against
+    summed columns would measure the filesystem.
+
+    Each directory holds exactly one paused ticket, so this is the per-pause
+    cost.
     """
     total = 0
+    for blob in directory.rglob("*.json"):
+        total += blob.stat().st_size
     for database in directory.glob("*.sqlite3"):
         if database.name == "outbox.sqlite3":
             continue
@@ -198,11 +205,16 @@ def run_stack(name: str, factory, registry: PromptRegistry, root: Path) -> Chaos
     # How much of the shared business logic had to be done again. One call
     # means the classification survived; two means the run started over.
     result.midrun_repeated_model_calls = restarted.client.calls
-    result.note = (
-        "resumed at the unfinished step"
-        if result.midrun_repeated_model_calls <= 1
-        else "no mid-run state; the run restarted"
-    )
+    # Three outcomes, not two. Zero repeated calls means the stack checkpointed
+    # BELOW the step — every finished tool result survived — which is a
+    # different property from resuming at the step boundary, and the table
+    # should not flatten them together.
+    if result.midrun_repeated_model_calls == 0:
+        result.note = "resumed with nothing repeated"
+    elif result.midrun_repeated_model_calls == 1:
+        result.note = "resumed at the unfinished step"
+    else:
+        result.note = "no mid-run state; the run restarted"
     return result
 
 

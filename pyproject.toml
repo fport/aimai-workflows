@@ -48,6 +48,7 @@ service = [
 stacks = [
     "pydantic-ai>=2.0",
     "openai-agents>=0.2",
+    "strands-agents>=1.55",
 ]
 providers = ["aimai-kit[providers]>=1.0.1"]
 

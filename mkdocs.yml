@@ -90,7 +90,7 @@ plugins:
             Overview: Genel bakış
             Stages: Aşamalar
             "06. Durable state and a human gate": "06. Kalıcı state ve insan onayı"
-            "07. Four stacks, one flow": "07. Tek akış, dört stack"
+            "07. Five stacks, one flow": "07. Tek akış, beş stack"
             "08. Writing the coordination layer": "08. Koordinasyon katmanını yazmak"
             Measurements: Ölçümler
             Production checklist: Proda çıkmadan checklist
@@ -100,7 +100,7 @@ nav:
       - Overview: index.md
   - Stages:
       - "06. Durable state and a human gate": 06-contract-graph.md
-      - "07. Four stacks, one flow": 07-workflow-stacks.md
+      - "07. Five stacks, one flow": 07-workflow-stacks.md
       - "08. Writing the coordination layer": 08-dag-orchestrator.md
   - Measurements: measurements.md
   - Production checklist: checklist.md

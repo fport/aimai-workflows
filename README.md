@@ -17,10 +17,10 @@ questions.
 | Stage | Package | The question it answers |
 |---|---|---|
 | 06 | `contract/` | Where does the state live when a workflow waits days for a human? |
-| 07 | `stacks/` | What actually differs between four orchestration stacks? |
+| 07 | `stacks/` | What actually differs between five orchestration stacks? |
 | 08 | `dagrun/` | What is the coordination layer a framework does for you? |
 
-**153 tests**, none of which needs an API key, a database or a network.
+**167 tests**, none of which needs an API key, a database or a network.
 
 Built on [aimai-kit](https://github.com/fport/aimai-kit) — the provider,
 prompt, tool and agent layers come from there, so this repo can be about
@@ -53,7 +53,7 @@ days; waiting with `interrupt()` means holding nothing at all.
 
 ```bash
 uv sync --all-extras --group dev
-uv run pytest                          # 153 tests, no API key, no database
+uv run pytest                          # 167 tests, no API key, no database
 
 # The headline claim, executable: kill the worker mid-approval and finish.
 uv run python scripts/kill_mid_run.py
@@ -96,9 +96,9 @@ client for a real one to get a real risk report.
 
 ## 07 — workflow-stacks
 
-The same support flow written four times: plain Python, LangGraph, pydantic-ai
-and the OpenAI Agents SDK. Classify a ticket, fetch knowledge base articles,
-draft a reply, stop for a human when the ticket is risky, send.
+The same support flow written five times: plain Python, LangGraph, pydantic-ai,
+the OpenAI Agents SDK and Strands Agents. Classify a ticket, fetch knowledge
+base articles, draft a reply, stop for a human when the ticket is risky, send.
 
 The business logic is written **once**, in `stacks/core.py`, and all four
 import it. Whatever differs between the four files is orchestration and nothing
@@ -122,18 +122,19 @@ sends nothing twice.
 | Stack | completed | escalated | resumed after restart | duplicate sends | llm calls | orchestration lines |
 |---|---|---|---|---|---|---|
 | plain Python | 50 | 15 | 15 | 0 | 100 | 160 |
-| LangGraph | 50 | 15 | 15 | 0 | 100 | 151 |
-| pydantic-ai | 50 | 15 | 15 | 0 | 300 | 259 |
-| OpenAI Agents SDK | 50 | 15 | 15 | 0 | 300 | 255 |
+| LangGraph | 50 | 15 | 15 | 0 | 100 | **151** |
+| pydantic-ai | 50 | 15 | 15 | 0 | **300** | 259 |
+| OpenAI Agents SDK | 50 | 15 | 15 | 0 | **300** | 255 |
+| Strands Agents | 50 | 15 | 15 | 0 | **300** | 255 |
 
 Two findings worth stating plainly.
 
-**Three times the model calls.** The two agent versions spend one model turn
+**Three times the model calls.** All three agent versions spend one model turn
 per tool call on top of the two calls the business logic makes — the model is
 deciding what to do next, and that decision is a request. For a five-step flow
-whose shape never varies, that is 200 extra calls per 50 tickets bought
-nothing. It buys something the moment the shape *does* vary, which is the
-argument for stage 08.
+whose shape never varies, those 200 extra calls per 50 tickets bought nothing.
+They buy something the moment the shape *does* vary, which is the argument for
+stage 08.
 
 **LangGraph is not more code than writing it yourself.** 151 lines against 160.
 The plain version spends its lines on a `step` column, a `match`, and a
@@ -147,21 +148,37 @@ return before the human corrected it".
 | Stack | Killed while parked → approved? | Paused state | Killed mid-run → resumed? | Model calls repeated |
 |---|---|---|---|---|
 | plain Python | yes | 461 B | yes | 1 — resumed at the unfinished step |
-| LangGraph | yes | 4,953 B | yes | 1 — resumed at the unfinished step |
+| LangGraph | yes | 4,966 B | yes | 1 — resumed at the unfinished step |
 | pydantic-ai | yes | 4,364 B | yes | 2 — no mid-run state; the run restarted |
 | OpenAI Agents SDK | yes | 11,427 B | yes | 2 — no mid-run state; the run restarted |
+| Strands Agents | yes | 5,996 B | yes | **0 — nothing repeated at all** |
 
-All four survive being killed **while parked on the gate** — none of them holds
+All five survive being killed **while parked on the gate** — none of them holds
 the paused run in memory, and none sends a duplicate reply when it comes back.
-That is the bar, and all four clear it.
+That is the bar, and all five clear it.
 
-They separate on being killed **mid-run**. The two versions with a state store
-written per step resume at the step that had not finished; the two agent
-versions have nothing between "run started" and "run returned", so they repeat
-the work. Both frameworks *can* checkpoint mid-run — pydantic-ai through
-`agent.iter()`, the Agents SDK through per-turn `to_state()` — but neither does
-it for you, and this repo did not write it. That is the honest answer to "does
-it resume": yes, at the granularity you were willing to write.
+They separate on being killed **mid-run**, into three groups rather than two.
+
+The two versions with a state store written per step resume at the step that
+had not finished, repeating one call. pydantic-ai and the Agents SDK have
+nothing between "run started" and "run returned", so they repeat the work —
+both *can* checkpoint mid-run (pydantic-ai through `agent.iter()`, the Agents
+SDK through per-turn `to_state()`) but neither does it for you, and this repo
+did not write it.
+
+**Strands repeats nothing.** Its session manager persists each tool result as
+it lands, so a killed worker comes back with the classification *and* the draft
+already done. That is a finer granularity than the two graph versions achieve,
+and it is the SDK's default rather than something this repository wrote.
+
+That last point is the surprise of the stage. The other two agent SDKs hand
+the paused state back to the caller to store and re-supply; Strands writes it
+to the session and restores it when an agent is constructed. A brand new
+`Agent` over the same `session_id` in another process is *already parked* —
+`test_strands_session.py` asserts exactly that. So the neat split the first
+four versions suggested — "graph frameworks keep your state, agent SDKs hand it
+back" — is not a property of agent SDKs. It is a choice, and one of them made
+the other one.
 
 ### Decision table — cost and control
 
@@ -170,7 +187,8 @@ it resume": yes, at the granularity you were willing to write.
 | plain Python | 160 | you, entirely | the flow is a straight line, the team is small, and adding a dependency needs an argument. Also the right answer when the flow will be read more often than changed. |
 | LangGraph | 151 | you, in a topology | the flow branches, pauses for humans, or has to be inspectable after the fact. Costs a mental model — supersteps, channels, reducers, replay — that everyone debugging it has to learn first. |
 | pydantic-ai | 259 | the model, within typed tools | the codebase is already pydantic-shaped and you want typed tools and validated outputs without adopting a runtime. You will carry the state yourself. |
-| OpenAI Agents SDK | 255 | the model, mostly | the work genuinely varies per input, so a fixed topology would be a lie. The cost is that the loop is the vendor's and the state blob is opaque enough that you will not migrate it. |
+| OpenAI Agents SDK | 255 | the model, mostly | the work genuinely varies per input and you are already on OpenAI. The loop is the vendor's and the state blob is opaque enough that you will not migrate it. |
+| Strands Agents | 255 | the model, mostly | the work varies per input **and** you want the pause to survive without writing the persistence yourself. The only agent SDK here that gives you both. |
 
 ### Decision table — state, HITL and lock-in
 
@@ -180,13 +198,15 @@ it resume": yes, at the granularity you were willing to write.
 | LangGraph | the checkpointer (SQLite/Postgres) | `interrupt()` + `Command(resume=…)` | moderate: the state schema and the topology are LangGraph's, the nodes are not. Migrating means rewriting one file. |
 | pydantic-ai | a message history **you** serialize (4.4 KB paused) | `ApprovalRequired` on the tool + `DeferredToolResults` | low: history is JSON you store where you like. The gate moves into the tool that performs the side effect, which is a design constraint, not a storage one. |
 | OpenAI Agents SDK | a `RunState` blob **you** serialize (11.4 KB paused) | `needs_approval` predicate + `state.approve()` | highest: the blob holds items, usage, approvals and a tool-use tracker in the SDK's own shape. Readable, not portable. |
+| Strands Agents | a **session the SDK writes** (6.0 KB paused, JSON files) | `tool_context.interrupt()` + an `interruptResponse` input | moderate: the session format is the SDK's, but it is plain JSON on a filesystem — or S3 — and a person can read it during an incident. |
 
-The paused-state sizes are the same ticket in all four columns, measured in
-`chaos.py` by summing every text and blob column each stack wrote: 461 bytes
-for a hand-written row, 4.9 KB of LangGraph checkpoint, 4.4 KB of pydantic-ai
-message history, 11.4 KB of Agents SDK run state. Twenty-five times the storage
-for the same pause, at the far end — irrelevant at 50 tickets, a conversation
-at 50,000 open approvals.
+The paused-state sizes are the same ticket in all five rows, measured in
+`chaos.py` by summing every text and blob column each stack wrote, plus the
+bytes of any JSON session files: 461 bytes for a hand-written row, 4.9 KB of
+LangGraph checkpoint, 4.4 KB of pydantic-ai message history, 6.0 KB of Strands
+session, 11.4 KB of Agents SDK run state. Twenty-five times the storage for the
+same pause, at the far end — irrelevant at 50 tickets, a conversation at 50,000
+open approvals.
 
 **Trace destinations**, since nobody reads this until it is a problem: plain
 Python has none. LangGraph emits to LangSmith when `LANGCHAIN_TRACING_V2` is
@@ -205,15 +225,23 @@ branch is exactly the code that goes stale when someone adds a step and forgets
 it. State history is the other half: the first time a reviewer asks "what did
 it say before I corrected it", the plain version has no answer.
 
-I would not reach for either agent SDK here. The flow's shape does not vary, so
+I would not reach for an agent SDK *here*. The flow's shape does not vary, so
 paying three times the model calls for a model to rediscover that shape on
-every ticket is spending money to add variance. They earn their place when the
-steps genuinely depend on the input — which is stage 08's question, and the
-answer there is not "use a bigger framework" either.
+every ticket is spending money to add variance.
 
-The constraint that would change my mind is a team already fluent in one of
-them. All four passed every test in this repo; none of the differences above is
-worth relearning an ecosystem over.
+**When the shape does vary, I would reach for Strands**, and the reason is the
+chaos table rather than the benchmark. The three agent SDKs cost the same in
+model calls and within four lines of each other in orchestration code; they
+differ in what happens when the process dies. Two of them hand me the paused
+state to store, re-supply and keep in sync with my own schema — a persistence
+layer I have to write, test and back up. Strands persists it, restores it, and
+resumes below the step boundary. That is not a small convenience: it is the
+difference between "human-in-the-loop is supported" and "human-in-the-loop is
+supported once you have built the durable part".
+
+The constraint that would change my mind is a team already fluent in one of the
+others. All five passed every test in this repo; none of the differences above
+is worth relearning an ecosystem over.
 
 
 ---
@@ -594,6 +622,15 @@ knowing before deciding it fits an existing codebase.
 **Agents SDK tracing ships to OpenAI unless told otherwise.** Not a bug — a
 default. `set_tracing_disabled(True)` at import, or a custom processor.
 
+**Strands prints to stdout by default.** The SDK's default callback handler
+narrates the model's output and every tool call, which breaks any caller that
+parses the process's output. `callback_handler=None`.
+
+**A session is a directory, not a file.** Cleanup code that globs `*.sqlite3`
+or calls `unlink()` leaves a Strands session behind, and the next run then
+looks idempotent for the wrong reason. The benchmark's teardown had this bug
+until Strands was added.
+
 **Failing an over-budget node is not enough; stop scheduling.** A runner that
 keeps starting work after the ceiling spends it several times over. Stage 08's
 executor marks the remaining nodes SKIPPED with the reason, which is also what
@@ -642,6 +679,7 @@ stacks/             stage 07
   langgraph_stack.py    a graph, a checkpointer, interrupt()
   pydantic_ai_stack.py  typed tools, ApprovalRequired, a message history
   openai_agents_stack.py  model-driven tools, needs_approval, a RunState blob
+  strands_stack.py      tool_context.interrupt(), a session the SDK persists
   bench.py          the comparison table
   chaos.py          SIGKILL at two points, per stack
 web/review.html     the approval screen

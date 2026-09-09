@@ -21,6 +21,14 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
 
+    # `uv sync --python 3.13` builds a 3.13 environment, but `uv run` then
+    # picks the interpreter named in .python-version (3.12) and runs against an
+    # environment nothing synced — so the 3.13 job failed on a missing extra
+    # that the sync step had visibly installed. Setting it once for the job
+    # makes both commands agree.
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +38,7 @@ jobs:
           enable-cache: true
 
       - name: Install the project
-        run: uv sync --all-extras --group dev --python ${{ matrix.python-version }}
+        run: uv sync --all-extras --group dev
 
       - name: Lint
         run: uv run ruff check src/ tests/ scripts/ assets/

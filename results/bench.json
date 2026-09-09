@@ -42,5 +42,16 @@
     "resumed_after_restart": 15,
     "seconds": null,
     "stack": "openai-agents"
+  },
+  {
+    "completed": 50,
+    "duplicate_sends": 0,
+    "escalated": 15,
+    "llm_calls": 300,
+    "orchestration_lines": 255,
+    "replies_sent": 50,
+    "resumed_after_restart": 15,
+    "seconds": null,
+    "stack": "strands"
   }
 ]

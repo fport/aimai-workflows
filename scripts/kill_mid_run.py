@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -173,9 +174,7 @@ def main() -> int:
         else "\nFAIL — see the report above"
     )
     if not args.keep:
-        for path in workspace.glob("*"):
-            path.unlink()
-        workspace.rmdir()
+        shutil.rmtree(workspace, ignore_errors=True)
     return 0 if ok else 1
 
 

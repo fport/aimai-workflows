@@ -12,9 +12,9 @@ The same review — start, pause at the gate, approve — under each mode.
 
 | Mode | End to end (s) | Checkpoint writes | Supersteps | Resumed | After SIGKILL during the assessment, the run resumes at |
 |---|---|---|---|---|---|
-| `exit` | 0.089 | 2 | 2 | yes | `nothing survived; the review restarts` |
-| `async` | 0.006 | 6 | 6 | yes | `assess_risk` |
-| `sync` | 0.019 | 6 | 6 | yes | `assess_risk` |
+| `exit` | 0.088 | 2 | 2 | yes | `nothing survived; the review restarts` |
+| `async` | 0.018 | 6 | 6 | yes | `assess_risk` |
+| `sync` | 0.006 | 6 | 6 | yes | `assess_risk` |
 
 ## Load: 100 reviews
 
@@ -24,9 +24,9 @@ The same review — start, pause at the gate, approve — under each mode.
 | Replay rate | reviews whose assessment node ran twice / reviews | 0.000 |
 | Mean state size | serialized state per thread | 3402 B |
 | Largest state | same, worst thread | 4963 B |
-| Checkpoint write latency p95 | per `put`, `sync` mode | 0.251 ms |
+| Checkpoint write latency p95 | per `put`, `sync` mode | 0.249 ms |
 | Checkpoint writes | total `put` calls over the run | 566 |
-| Time per review | wall clock / reviews | 4.0 ms |
+| Time per review | wall clock / reviews | 3.9 ms |
 | CRM notes | one per approved review | 100 |
 | Approval wait p50 | SIMULATED, not observed | 2.91 h |
 | Approval wait p95 | SIMULATED, not observed | 18.07 h |

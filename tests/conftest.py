@@ -81,7 +81,9 @@ def new_graph(registry: PromptRegistry, checkpointer, **kwargs):
     return compile_graph(RuleBasedReviewer(**kwargs), checkpointer, registry=registry)
 
 
-@pytest.fixture(params=["plain", "langgraph", "pydantic-ai", "openai-agents"])
+@pytest.fixture(
+    params=["plain", "langgraph", "pydantic-ai", "openai-agents", "strands"]
+)
 def stack(request, registry):
     """Every stack, one at a time, behind the same two verbs.
 

@@ -99,7 +99,7 @@ uv run python scripts/kill_mid_run.py
 
 ---
 
-## 07 — four stacks
+## 07 — five stacks
 
 ```bash
 uv run stack-bench                              # results/bench.md
@@ -110,10 +110,11 @@ uv run python -m aimai_workflows.stacks.chaos   # results/chaos.md
 
 | Stack | completed | escalated | resumed after restart | duplicate sends | llm calls | orchestration lines | seconds |
 |---|---|---|---|---|---|---|---|
-| plain Python | 50 | 15 | 15 | 0 | 100 | 160 | 0.25 |
-| LangGraph | 50 | 15 | 15 | 0 | 100 | 151 | 0.24 |
-| pydantic-ai | 50 | 15 | 15 | 0 | 300 | 259 | 0.66 |
-| OpenAI Agents SDK | 50 | 15 | 15 | 0 | 300 | 255 | 0.46 |
+| plain Python | 50 | 15 | 15 | 0 | 100 | 160 | 0.20 |
+| LangGraph | 50 | 15 | 15 | 0 | 100 | 151 | 0.20 |
+| pydantic-ai | 50 | 15 | 15 | 0 | 300 | 259 | 0.42 |
+| OpenAI Agents SDK | 50 | 15 | 15 | 0 | 300 | 255 | 0.40 |
+| Strands Agents | 50 | 15 | 15 | 0 | 300 | 255 | 0.51 |
 
 `completed` counts tickets with at least one reply in the outbox;
 `duplicate_sends` counts extra rows the customer would have received. Both are
@@ -127,18 +128,21 @@ comment lines would reward the version with the most explaining to do.
 | Stack | Killed while parked → approved? | Replies sent | Paused state | Killed mid-run → resumed? | Model calls repeated |
 |---|---|---|---|---|---|
 | plain Python | yes | 1 | 461 B | yes | 1 |
-| LangGraph | yes | 1 | 4,953 B | yes | 1 |
+| LangGraph | yes | 1 | 4,966 B | yes | 1 |
 | pydantic-ai | yes | 1 | 4,364 B | yes | 2 |
 | OpenAI Agents SDK | yes | 1 | 11,427 B | yes | 2 |
+| Strands Agents | yes | 1 | 5,996 B | yes | 0 |
 
 `Paused state` is every text and blob column each stack wrote for one paused
-ticket — what it costs to keep a run waiting for a human. Twenty-five times the
-storage at the far end: irrelevant at 50 tickets, a conversation at 50,000 open
-approvals.
+ticket, plus the bytes of any JSON session files — what it costs to keep a run
+waiting for a human. Twenty-five times the storage at the far end: irrelevant at
+50 tickets, a conversation at 50,000 open approvals.
 
 `Model calls repeated` counts calls to the shared business logic in the process
-that took over. One means the work before the kill was reused; two means the
-flow started from the beginning.
+that took over. Two means the flow started from the beginning; one means the
+work before the kill was reused; **zero means every finished tool result
+survived**, which only Strands achieves and only because its session manager
+persists each result as it lands.
 
 ---
 

@@ -21,3 +21,10 @@
       belirtiliyor**, framework'ün destekleyebileceğiyle değil.
 - [ ] **Karar tablosu her seçeneği *ne zaman kullanmamak* gerektiğini de
       söylüyor.** Kazananı olan ve kısıtı olmayan bir karşılaştırma reklamdır.
+- [ ] **Duraklamayı kendi kalıcılaştıran bir framework, onu sana geri
+      verenden daha değerli.** Buradaki üç agent SDK'sının ikisi o katmanı
+      yazmayı, test etmeyi ve yedeklemeyi sana bırakıyor; karşılaştırma
+      hangisinin öyle olduğunu söylemeli.
+- [ ] **Temizlik kodu dosyaları değil dizinleri de siliyor.** Dizin olarak
+      tutulan bir session `*.sqlite3` glob'undan sağ çıkar ve sonraki koşu
+      yanlış sebeple idempotent görünür.

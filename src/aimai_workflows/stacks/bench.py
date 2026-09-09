@@ -1,4 +1,4 @@
-"""Run the same 50 tickets through all four stacks and produce the table.
+"""Run the same 50 tickets through all five stacks and produce the table.
 
     uv run stack-bench                  # writes results/bench.md
 
@@ -25,6 +25,7 @@ import argparse
 import ast
 import json
 import os
+import shutil
 import statistics
 import tempfile
 import time
@@ -60,13 +61,20 @@ class StackMeasurement:
 def stack_factories() -> dict[str, object]:
     """Imported lazily: two of the four pull in a third-party framework, and a
     reader who only wants the plain version should not have to install them."""
-    from . import langgraph_stack, openai_agents_stack, plain, pydantic_ai_stack
+    from . import (
+        langgraph_stack,
+        openai_agents_stack,
+        plain,
+        pydantic_ai_stack,
+        strands_stack,
+    )
 
     return {
         plain.NAME: plain.PlainStack,
         langgraph_stack.NAME: langgraph_stack.LangGraphStack,
         pydantic_ai_stack.NAME: pydantic_ai_stack.PydanticAIStack,
         openai_agents_stack.NAME: openai_agents_stack.OpenAIAgentsStack,
+        strands_stack.NAME: strands_stack.StrandsStack,
     }
 
 
@@ -99,13 +107,20 @@ def orchestration_lines(module_path: Path) -> int:
 
 def benchmark(name: str, factory, registry: PromptRegistry) -> StackMeasurement:
     """One stack, 50 tickets, then the same 50 again."""
-    from . import langgraph_stack, openai_agents_stack, plain, pydantic_ai_stack
+    from . import (
+        langgraph_stack,
+        openai_agents_stack,
+        plain,
+        pydantic_ai_stack,
+        strands_stack,
+    )
 
     modules = {
         plain.NAME: plain,
         langgraph_stack.NAME: langgraph_stack,
         pydantic_ai_stack.NAME: pydantic_ai_stack,
         openai_agents_stack.NAME: openai_agents_stack,
+        strands_stack.NAME: strands_stack,
     }
     measurement = StackMeasurement(
         stack=name,
@@ -167,7 +182,7 @@ def render(rows: list[StackMeasurement]) -> str:
     lines = [
         "# Stack benchmark",
         "",
-        "50 synthetic tickets through four orchestrators, same order, same",
+        "50 synthetic tickets through five orchestrators, same order, same",
         "deterministic model (`RuleBasedSupportModel`, a stub — not an LLM).",
         "Each stack is run three times over the fixture set: once to triage and",
         "escalate, once from a fresh instance to approve, and once more to prove",
@@ -207,9 +222,14 @@ def main(argv: list[str] | None = None) -> int:
     rows: list[StackMeasurement] = []
     for name, factory in stack_factories().items():
         reset_outbox()
-        for stale in workspace.glob("*.sqlite3"):
-            if stale.name != "outbox.sqlite3":
-                stale.unlink()
+        # Not just `*.sqlite3`: Strands keeps a session as a DIRECTORY of JSON
+        # files, so a glob for one file extension would leave the previous
+        # stack's state in place and make the next one look idempotent for the
+        # wrong reason.
+        for stale in workspace.iterdir():
+            if stale.name == "outbox.sqlite3":
+                continue
+            shutil.rmtree(stale) if stale.is_dir() else stale.unlink()
         rows.append(benchmark(name, factory, registry))
 
     RESULTS.mkdir(exist_ok=True)
@@ -230,9 +250,7 @@ def main(argv: list[str] | None = None) -> int:
         f"median orchestration lines: "
         f"{statistics.median(r.orchestration_lines for r in rows):.0f}"
     )
-    for path in workspace.glob("*"):
-        path.unlink()
-    workspace.rmdir()
+    shutil.rmtree(workspace, ignore_errors=True)
     return 0
 
 

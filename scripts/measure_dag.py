@@ -24,6 +24,7 @@ import asyncio
 import json
 import os
 import random
+import shutil
 import statistics
 import sys
 import tempfile
@@ -134,9 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     (RESULTS / "dagrun.md").write_text(render(report_data), encoding="utf-8")
     print(render(report_data))
-    for path in workspace.glob("*"):
-        path.unlink()
-    workspace.rmdir()
+    shutil.rmtree(workspace, ignore_errors=True)
     return 0
 
 

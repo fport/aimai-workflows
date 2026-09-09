@@ -22,3 +22,9 @@
       not the granularity the framework could support.
 - [ ] **The decision table says when *not* to use each option.** A comparison
       with a winner and no constraints is an advertisement.
+- [ ] **A framework that persists the pause itself is worth more than one
+      that hands it back.** Two of the three agent SDKs here leave you to
+      write, test and back up that layer; the comparison should say which.
+- [ ] **Cleanup code handles directories, not just files.** A session kept
+      as a directory survives a `*.sqlite3` glob, and the next run then
+      looks idempotent for the wrong reason.

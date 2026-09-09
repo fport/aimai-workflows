@@ -23,7 +23,7 @@ be about orchestration alone.
 ```bash
 git clone https://github.com/fport/aimai-workflows && cd aimai-workflows
 uv sync --all-extras --group dev
-uv run pytest        # 153 tests: no API key, no database, no network
+uv run pytest        # 167 tests: no API key, no database, no network
 ```
 
 An LLM call takes seconds. An agent run takes minutes. A human approval takes
@@ -44,13 +44,13 @@ days. Everything in this repository follows from that gap.
     A side effect written above that call fires once per resume — and the
     resume is the whole point of the design.
 
--   **[07. Four stacks, one flow](07-workflow-stacks.md)**
+-   **[07. Five stacks, one flow](07-workflow-stacks.md)**
 
-    The same support flow in plain Python, LangGraph, pydantic-ai and the
-    OpenAI Agents SDK, with the business logic written once and imported by
-    all four.
+    The same support flow in plain Python, LangGraph, pydantic-ai, the OpenAI
+    Agents SDK and Strands Agents, with the business logic written once and
+    imported by all five.
 
-    *The trap it closes:* comparing frameworks by writing four programs. Every
+    *The trap it closes:* comparing frameworks by writing five programs. Every
     difference is then an implementation difference, and the table measures
     nothing.
 
@@ -138,8 +138,9 @@ tables and their caveats are in **[Measurements](measurements.md)**.
 |---|---|
 | `durability` modes under `SIGKILL` | `exit` loses the whole run; `sync` resumes at the unfinished node, for 0.23 ms per write |
 | Side effect inside the gate | Two CRM notes for one approval — kept as an executable counter-example |
-| Four stacks, 50 tickets | The two agent SDKs spend 3× the model calls; LangGraph costs fewer lines than writing the state machine by hand |
-| Paused state per stack | 461 B hand-written, 4.9 KB LangGraph, 4.4 KB pydantic-ai, 11.4 KB Agents SDK |
+| Five stacks, 50 tickets | All three agent SDKs spend 3× the model calls; LangGraph costs fewer lines than writing the state machine by hand |
+| Paused state per stack | 461 B hand-written, 4.9 KB LangGraph, 4.4 KB pydantic-ai, 6.0 KB Strands, 11.4 KB Agents SDK |
+| `SIGKILL` mid-run | Strands repeats nothing; the graph versions repeat one call; the other two agent SDKs restart |
 | DAG rerun | 100% of a rerun's spend served from the store |
 | Degradation | 13 of 100 jobs delivered on partial evidence — and said so in the opinion |
 
